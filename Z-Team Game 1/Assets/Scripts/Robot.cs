@@ -5,8 +5,10 @@ using UnityEngine.AI;
 
 public class Robot : MonoBehaviour
 {
-
-
+    /// <summary>
+    /// The current target this zombie is chasing
+    /// </summary>
+    public Transform Target { get; set; }
     private NavMeshAgent agent;
 
     private void Awake()
