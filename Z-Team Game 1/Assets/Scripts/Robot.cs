@@ -5,7 +5,11 @@ using UnityEngine.AI;
 
 public class Robot : MonoBehaviour
 {
-    NavMeshAgent agent;
+    /// <summary>
+    /// The current target this zombie is chasing
+    /// </summary>
+    public Transform Target { get; set; }
+    private NavMeshAgent agent;
 
     Transform playerTransform;
 
@@ -30,9 +34,14 @@ public class Robot : MonoBehaviour
         {
             pnt = playerTransform.position;
         }
-        
+
         //Vector3 pnt = Camera.main.ScreenToWorldPoint(new Vector3(Input.mousePosition.x, Input.mousePosition.y, 5));
         agent.destination = pnt;
         pnt.z = -1;
+    }
+
+    private void OnDestroy()
+    {
+        RobotManager.DecrementRobotCount();
     }
 }

@@ -10,6 +10,8 @@ public class GameManager : Singleton<GameManager>
 
     [SerializeField] GameObject robotPrefab;
 
+    [SerializeField] RobotSpawnZone[] robotSpawnZones;
+
     /// <summary>
     /// The current state of the game
     /// </summary>
@@ -20,7 +22,7 @@ public class GameManager : Singleton<GameManager>
     // Start is called before the first frame update
     void Start()
     {
-        robotManager = new RobotManager(robotPrefab);
+        robotManager = new RobotManager(robotPrefab, robotSpawnZones);
         NewGame();
     }
 
@@ -52,6 +54,11 @@ public class GameManager : Singleton<GameManager>
 
             case GameState.Playing:
                 robotManager.Update();
+
+#if UNITY_EDITOR
+                if (Input.GetKeyDown(KeyCode.R))
+                    robotManager.Spawn();
+#endif
                 break;
 
             case GameState.Paused:
@@ -65,4 +72,16 @@ public class GameManager : Singleton<GameManager>
                 break;
         }
     }
+
+#if UNITY_EDITOR
+    /// <summary>
+    /// Gizmos
+    /// </summary>
+    [ExecuteInEditMode]
+    public void OnDrawGizmos()
+    {
+        foreach (var rsz in robotSpawnZones)
+            Gizmos.DrawWireCube(new Vector3(rsz.position.x, gameObjectYPosition, rsz.position.y), new Vector3(rsz.size.x * 2, 0, rsz.size.y * 2));
+    }
+#endif
 }
