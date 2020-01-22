@@ -29,7 +29,7 @@ class RobotManager
 	/// Create a manager to control robot spawning
 	/// </summary>
 	/// <param name="robotPrefab">The basic robot prefab to spawn</param>
-	public RobotManager(GameObject robotPrefab)
+	public RobotManager(GameObject robotPrefab, RobotSpawnZone[] spawnZones)
 	{
 		this.robotPrefab = robotPrefab;
 
@@ -37,7 +37,7 @@ class RobotManager
 		decrementRobotEvent += () => currAmount--;
 
 		//Find spawn zones
-		spawnZones = GameObject.FindObjectsOfType<RobotSpawnZone>();
+		this.spawnZones = spawnZones;
 	}
 
 	/// <summary>
@@ -96,7 +96,11 @@ class RobotManager
 	/// <summary>
 	/// Spawn a zombie at a random position
 	/// </summary>
+#if UNITY_EDITOR
+	public void Spawn()
+#else
 	private void Spawn()
+#endif
 	{
 		Object.Instantiate(robotPrefab, spawnZones[Random.Range(0, spawnZones.Length)].GetRandomPointInZone(), Quaternion.identity);
 		currAmount++;
