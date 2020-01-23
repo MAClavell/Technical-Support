@@ -9,8 +9,9 @@ public class GameManager : Singleton<GameManager>
 	public static readonly float CONSTANT_Y_POS = -0.92f;
 	public static readonly ushort MAX_TOWERS = 100;
 
-    [SerializeField] GameObject robotPrefab;
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
+    [SerializeField] GameObject robotPrefab;
+    [SerializeField] GameObject towerPrefab;
 
     public Player Player { get; private set; }
 
@@ -19,13 +20,13 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public GameState CurrentState { get; private set; }
 
-    private List<Tower> towers;
+    private List<GameObject> towers;
     private RobotManager robotManager;
 
     //Initialize vars
     private void Awake()
     {
-        towers = new List<Tower>();
+        towers = new List<GameObject>();
         Player = GameObject.FindObjectOfType<Player>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
     }
@@ -45,8 +46,8 @@ public class GameManager : Singleton<GameManager>
         robotManager.Start();
 
         //Remove any towers
-        foreach (Tower t in towers)
-           Destroy(t.gameObject);
+        foreach (var t in towers)
+           Destroy(t);
         towers.Clear();
     }
 
@@ -87,6 +88,11 @@ public class GameManager : Singleton<GameManager>
                 Debug.LogError("Unknown game state reached. What did you do??");
                 break;
         }
+    }
+
+    public void SpawnTower(Vector3 position, Quaternion rotation)
+    {
+        towers.Add(Instantiate(towerPrefab, position, rotation));
     }
 
 #if UNITY_EDITOR

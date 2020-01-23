@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4934147078575018004}
   - component: {fileID: 3713402671594131567}
   - component: {fileID: 1974502834}
+  - component: {fileID: 1616226745830793264}
   m_Layer: 9
   m_Name: Tower
   m_TagString: Untagged
@@ -107,3 +108,19 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 0.9
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!208 &1616226745830793264
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1344750835316039683}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 0.5, y: 0.25, z: 0.5}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5

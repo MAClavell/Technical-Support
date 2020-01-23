@@ -4,25 +4,26 @@ using UnityEngine;
 
 public class Player : Targetable
 {
-    private float moveSpeed = 30.0f;
+    private const float moveSpeed = 30.0f;
 
+    private GameObject placeObj;
     private Vector3 moveDirection = Vector3.zero;
-
-    private float spriteWidth;
-
     private float leftBound;
     private float topBound;
     private float rightBound;
     private float bottomBound;
+    bool isPlacing;
 
     private void Awake()
     {
         IsMoveable = true;
+        isPlacing = false;
+        placeObj = transform.Find("TowerPlacement").gameObject;
     }
 
     private void Start()
     {
-        spriteWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x;
+        float spriteWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x;
 
         Transform groundTransform = GameObject.Find("GameManager/Ground").transform;
         MeshRenderer groundRenderer = groundTransform.GetComponent<MeshRenderer>();
@@ -33,15 +34,41 @@ public class Player : Targetable
         rightBound = groundTransform.position.x + groundRenderer.bounds.extents.x - spriteHalfWidth;
         bottomBound = groundTransform.position.z - groundRenderer.bounds.extents.z + spriteHalfWidth;
         topBound = groundTransform.position.z + groundRenderer.bounds.extents.z - spriteHalfWidth;
+
+        placeObj.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
+        //Moving
         moveDirection.x = Input.GetAxisRaw("Horizontal");
         moveDirection.z = Input.GetAxisRaw("Vertical");
-
         moveDirection.Normalize();
+
+        //Placing towers
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            //Show shadow of tower before placing
+            if(!isPlacing)
+            {
+                isPlacing = true;
+                placeObj.SetActive(true);
+            }
+            //Place the tower
+            else
+            {
+                GameManager.Instance.SpawnTower(placeObj.transform.position, placeObj.transform.rotation);
+                isPlacing = false;
+                placeObj.SetActive(false);
+            }
+        }
+        //Cancel placement
+        else if(isPlacing && Input.GetKeyDown(KeyCode.F))
+        {
+            isPlacing = false;
+            placeObj.SetActive(false);
+        }
     }
 
     private void FixedUpdate()
