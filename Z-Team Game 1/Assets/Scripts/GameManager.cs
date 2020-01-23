@@ -12,6 +12,8 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] GameObject robotPrefab;
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
 
+    public Player Player { get; private set; }
+
     /// <summary>
     /// The current state of the game
     /// </summary>
@@ -24,6 +26,7 @@ public class GameManager : Singleton<GameManager>
     private void Awake()
     {
         towers = new List<Tower>();
+        Player = GameObject.FindObjectOfType<Player>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
     }
 

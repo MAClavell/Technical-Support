@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3482839362885954467}
   - component: {fileID: 4934147078575018004}
   - component: {fileID: 3713402671594131567}
+  - component: {fileID: 1974502834}
   m_Layer: 9
   m_Name: Tower
   m_TagString: Untagged
@@ -93,3 +94,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66a58e72f842ec743912b9c8c7cb4f7d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!135 &1974502834
+SphereCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1344750835316039683}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.9
+  m_Center: {x: 0, y: 0, z: 0}

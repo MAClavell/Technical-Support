@@ -12,7 +12,7 @@ public class Robot : Targetable
 
     //Consts
     private const int MAX_HEALTH = 3;
-    private const int SEARCH_RADIUS = 10;
+    private const int SEARCH_RADIUS = 20;
     private const float SEARCH_TIMER_MAX = 0.2f;
 
     private NavMeshAgent agent;
@@ -32,7 +32,7 @@ public class Robot : Targetable
     void Start()
     {
         health = MAX_HEALTH;
-        Target = null; //TODO: replace with player
+        Target = GameManager.Instance.Player;
     }
 
     // Update is called once per frame
@@ -56,7 +56,7 @@ public class Robot : Targetable
         {
             //If still  null, assign to player
             if ((Target = FindTarget()) == null)
-                Target = null; //TODO: replace with player
+                Target = GameManager.Instance.Player;
             agent.destination = Target.transform.position;
         }
         //The target is moveable, so continuously update the position
