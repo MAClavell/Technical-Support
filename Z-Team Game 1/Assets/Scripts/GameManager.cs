@@ -6,10 +6,10 @@ public enum GameState { Starting, Playing, Paused, Ended }
 
 public class GameManager : Singleton<GameManager>
 {
-	public static readonly float gameObjectYPosition = -0.92f;
+	public static readonly float CONSTANT_Y_POS = -0.92f;
+	public static readonly ushort MAX_TOWERS = 100;
 
     [SerializeField] GameObject robotPrefab;
-
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
 
     /// <summary>
@@ -17,12 +17,19 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public GameState CurrentState { get; private set; }
 
+    private List<Tower> towers;
     private RobotManager robotManager;
+
+    //Initialize vars
+    private void Awake()
+    {
+        towers = new List<Tower>();
+        robotManager = new RobotManager(robotPrefab, robotSpawnZones);
+    }
 
     // Start is called before the first frame update
     void Start()
     {
-        robotManager = new RobotManager(robotPrefab, robotSpawnZones);
         NewGame();
     }
 
@@ -33,6 +40,11 @@ public class GameManager : Singleton<GameManager>
     {
         CurrentState = GameState.Starting;
         robotManager.Start();
+
+        //Remove any towers
+        foreach (Tower t in towers)
+           Destroy(t.gameObject);
+        towers.Clear();
     }
 
     /// <summary>
@@ -56,6 +68,7 @@ public class GameManager : Singleton<GameManager>
                 robotManager.Update();
 
 #if UNITY_EDITOR
+                //Press 'R' to add zombies (debug only)
                 if (Input.GetKeyDown(KeyCode.R))
                     robotManager.Spawn();
 #endif
@@ -80,8 +93,9 @@ public class GameManager : Singleton<GameManager>
     [ExecuteInEditMode]
     public void OnDrawGizmos()
     {
+        Gizmos.color = Color.white;
         foreach (var rsz in robotSpawnZones)
-            Gizmos.DrawWireCube(new Vector3(rsz.position.x, gameObjectYPosition, rsz.position.y), new Vector3(rsz.size.x * 2, 0, rsz.size.y * 2));
+            Gizmos.DrawWireCube(new Vector3(rsz.position.x, CONSTANT_Y_POS, rsz.position.y), new Vector3(rsz.size.x * 2, 0, rsz.size.y * 2));
     }
 #endif
 }

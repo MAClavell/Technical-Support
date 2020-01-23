@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7952302279127956577}
   - component: {fileID: 7952302279127956578}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -93,7 +93,7 @@ GameObject:
   - component: {fileID: 7952302280279630235}
   - component: {fileID: 1859810012433569774}
   - component: {fileID: 7254318634919704129}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Robot
   m_TagString: Untagged
   m_Icon: {fileID: 0}
