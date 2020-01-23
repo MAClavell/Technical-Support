@@ -5,63 +5,163 @@ using UnityEngine.AI;
 
 public class Robot : Targetable
 {
+    private enum RobotState { Moving, Attacking, Dying }
+    private enum RobotAttackState { Charging, Performing, Recovery}
+
     /// <summary>
     /// The current target this zombie is chasing
     /// </summary>
     public Targetable Target { get; set; }
 
     //Consts
-    private const int MAX_HEALTH = 3;
-    private const int SEARCH_RADIUS = 20;
     private const float SEARCH_TIMER_MAX = 0.2f;
+    private const float ATTACK_TIMER_MAX = 2f;
+    private const float CHARGE_TIMER_MAX = 0.5f;
+    private const float PERFORM_TIMER_MAX = 0.5f;
+    private const float RECOVERY_TIMER_MAX = 0.5f;
+    private const float ATTACK_RANGE = 16;
+    private const float CHARGE_ROTATION_SPEED = 100f;
+    private const float PERFORM_MOVE_SPEED = 10f;
+    private const int SEARCH_RADIUS = 20;
+    private const short MAX_HEALTH = 3;
 
-    private NavMeshAgent agent;
-    private float searchTimer;
-    private short health;
     Collider[] overlapSphereCols;
+    private NavMeshAgent agent;
+    private GameObject hitboxObj;
+    private Vector3 attackDirection;
+    private RobotState currentState;
+    private RobotAttackState currentAttackState;
+    private float searchTimer;
+    private float attackTimer;
+    private short health;
 
     //Initialize vars
     private void Awake()
     {
-        agent = GetComponent<NavMeshAgent>();
-        IsMoveable = true;
         overlapSphereCols = new Collider[GameManager.MAX_TOWERS];
+        agent = GetComponent<NavMeshAgent>();
+        hitboxObj = transform.Find("Hitbox").gameObject;
+        IsMoveable = true;
     }
 
     // Start is called before the first frame update
     void Start()
     {
         health = MAX_HEALTH;
+        searchTimer = 0;
+        attackTimer = 0;
+        currentState = RobotState.Moving;
+        currentAttackState = RobotAttackState.Charging;
         Target = GameManager.Instance.Player;
+        hitboxObj.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        //Search for a nearby tower
-        searchTimer += Time.deltaTime;
-        if(searchTimer > SEARCH_TIMER_MAX)
+
+        
+        switch (currentState)
         {
-            searchTimer -= SEARCH_TIMER_MAX;
-            Targetable newTarget = FindTarget();
-            if (newTarget != null)
-            {
-                Target = newTarget;
-                agent.destination = Target.transform.position;
-            }
+            case RobotState.Moving:
+                searchTimer += Time.deltaTime;
+                attackTimer += Time.deltaTime;
+
+                //Search for a nearby tower
+                if (searchTimer > SEARCH_TIMER_MAX)
+                {
+                    searchTimer -= SEARCH_TIMER_MAX;
+                    Targetable newTarget = FindTarget();
+                    if (newTarget != null)
+                    {
+                        Target = newTarget;
+                        agent.destination = Target.transform.position;
+                    }
+                }
+
+                //Find a new target because this one died
+                if (Target == null)
+                {
+                    //If still  null, assign to player
+                    if ((Target = FindTarget()) == null)
+                        Target = GameManager.Instance.Player;
+                    agent.destination = Target.transform.position;
+                }
+                //The target is moveable, so continuously update the position
+                else if (Target.IsMoveable)
+                    agent.destination = Target.transform.position;
+
+                //Activate attack if we can
+                if (attackTimer > ATTACK_TIMER_MAX &&
+                    Vector3.SqrMagnitude(transform.position - Target.transform.position) <= ATTACK_RANGE)
+                {
+                    attackTimer = 0;
+                    currentState = RobotState.Attacking;
+                    currentAttackState = RobotAttackState.Charging;
+                    agent.isStopped = true;
+                    
+                }
+                break;
+
+            case RobotState.Attacking:
+                switch (currentAttackState)
+                {
+                    //Charge up the attack
+                    case RobotAttackState.Charging:
+                        attackTimer += Time.deltaTime;
+
+                        //Rotate towards player
+                        Vector3 direction = (Target.transform.position - transform.position).normalized;
+                        Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
+                        transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * CHARGE_ROTATION_SPEED);
+
+                        if (attackTimer > CHARGE_TIMER_MAX)
+                        {
+                            attackDirection = transform.forward;
+                            attackTimer = 0;
+                            hitboxObj.SetActive(true);
+                            currentAttackState = RobotAttackState.Performing;
+                        }
+                        break;
+
+                    //Perform the actual attack
+                    case RobotAttackState.Performing:
+                        attackTimer += Time.deltaTime;
+
+                        //Move in attack direction
+                        agent.velocity = attackDirection * PERFORM_MOVE_SPEED;
+
+                        if(attackTimer > PERFORM_TIMER_MAX)
+                        {
+                            attackTimer = 0;
+                            hitboxObj.SetActive(false);
+                            currentAttackState = RobotAttackState.Recovery;
+                        }
+                        break;
+
+                    //Recover from the attack
+                    case RobotAttackState.Recovery:
+                        attackTimer += Time.deltaTime;
+                        if(attackTimer > RECOVERY_TIMER_MAX)
+                        {
+                            attackTimer = 0;
+                            currentState = RobotState.Moving;
+                            agent.isStopped = false;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+                break;
+
+            case RobotState.Dying:
+                break;
+
+            default:
+                break;
         }
 
-        //Find a new target because this one died
-        if(Target == null)
-        {
-            //If still  null, assign to player
-            if ((Target = FindTarget()) == null)
-                Target = GameManager.Instance.Player;
-            agent.destination = Target.transform.position;
-        }
-        //The target is moveable, so continuously update the position
-        else if(Target.IsMoveable)
-            agent.destination = Target.transform.position;
 
     }
 
@@ -100,6 +200,7 @@ public class Robot : Targetable
         if (health < 0)
         {
             RobotManager.DecrementRobotCount();
+            currentState = RobotState.Dying;
             Destroy(gameObject); //TODO: decide if object pooling would be better than destroy/instantiate
         }
     }
@@ -107,8 +208,11 @@ public class Robot : Targetable
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red;
+        Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, SEARCH_RADIUS);
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, Mathf.Sqrt(ATTACK_RANGE));
     }
 #endif
 }
