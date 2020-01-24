@@ -9,7 +9,7 @@ class RobotManager
 	private GameObject robotPrefab;
 
 	//Robot spawning
-	private const uint MAX_ROBOTS = 500;
+	public const uint MAX_ROBOTS = 500;
 	private const uint SPAWN_TIME_DIVISOR = 10; //adds one more zombie for time / N. If N=10, then 20 seconds would add 2+1 robots
 	private uint currAmount;
 	private uint toSpawn;
