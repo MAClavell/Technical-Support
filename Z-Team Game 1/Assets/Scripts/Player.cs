@@ -4,7 +4,11 @@ using UnityEngine;
 
 public class Player : Targetable
 {
-    private const float moveSpeed = 30.0f;
+    public const short ZBUCK_COLLECTION_RADIUS = 50;
+    private const float MOVE_SPEED = 30.0f;
+    private const ushort TOWER_PRICE = 10;
+
+    public uint ZBucks { get; private set; }
 
     private GameObject placeObj;
     private Vector3 moveDirection = Vector3.zero;
@@ -36,6 +40,8 @@ public class Player : Targetable
         topBound = groundTransform.position.z + groundRenderer.bounds.extents.z - spriteHalfWidth;
 
         placeObj.SetActive(false);
+
+        ZBucks = TOWER_PRICE;
     }
 
     // Update is called once per frame
@@ -73,7 +79,7 @@ public class Player : Targetable
 
     private void FixedUpdate()
     {
-        transform.position = transform.position + (moveDirection * moveSpeed * Time.fixedDeltaTime);
+        transform.position = transform.position + (moveDirection * MOVE_SPEED * Time.fixedDeltaTime);
         
         if (moveDirection != Vector3.zero)
         {
@@ -106,4 +112,22 @@ public class Player : Targetable
 
         transform.position = newTransform;
     }
+
+    /// <summary>
+    /// Add an amount of zbucks to the player
+    /// </summary>
+    /// <param name="amount">Amount to add</param>
+    public void AddZBucks(ushort amount)
+    {
+        ZBucks += amount;
+    }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, Mathf.Sqrt(ZBUCK_COLLECTION_RADIUS));
+    }
+#endif
 }
+

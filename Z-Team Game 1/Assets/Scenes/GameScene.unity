@@ -164,6 +164,8 @@ MonoBehaviour:
     type: 3}
   towerPrefab: {fileID: 1344750835316039683, guid: 68a43220ea841cb4eb13249e3ec1792f,
     type: 3}
+  zbuckPrefab: {fileID: 7957871202850625061, guid: deaa1e6054a957b47886644d67b39fe4,
+    type: 3}
 --- !u!4 &16036572
 Transform:
   m_ObjectHideFlags: 0

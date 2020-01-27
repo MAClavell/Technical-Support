@@ -14,7 +14,7 @@ public class Robot : Targetable
     public Targetable Target { get; set; }
 
     //Consts
-    private const float SEARCH_TIMER_MAX = 0.2f;
+    private const float SEARCH_TIMER_MAX = 0.5f;
     private const float ATTACK_TIMER_MAX = 2f;
     private const float CHARGE_TIMER_MAX = 0.5f;
     private const float PERFORM_TIMER_MAX = 0.5f;
@@ -22,8 +22,9 @@ public class Robot : Targetable
     private const float ATTACK_RANGE = 16;
     private const float CHARGE_ROTATION_SPEED = 100f;
     private const float PERFORM_MOVE_SPEED = 10f;
-    private const int SEARCH_RADIUS = 20;
+    private const short SEARCH_RADIUS = 20;
     private const short MAX_HEALTH = 3;
+    private const ushort MAX_TOWERS_TO_SEARCH = 20;
 
     Collider[] overlapSphereCols;
     private NavMeshAgent agent;
@@ -38,7 +39,7 @@ public class Robot : Targetable
     //Initialize vars
     private void Awake()
     {
-        overlapSphereCols = new Collider[GameManager.MAX_TOWERS];
+        overlapSphereCols = new Collider[MAX_TOWERS_TO_SEARCH];
         agent = GetComponent<NavMeshAgent>();
         hitboxObj = transform.Find("Hitbox").gameObject;
         IsMoveable = true;
@@ -156,6 +157,7 @@ public class Robot : Targetable
                 break;
 
             case RobotState.Dying:
+                Destroy(gameObject); //TODO: decide if object pooling would be better than destroy/instantiate
                 break;
 
             default:
@@ -200,8 +202,8 @@ public class Robot : Targetable
         if (health < 0)
         {
             RobotManager.DecrementRobotCount();
+            GameManager.Instance.SpawnZBucks(2, transform.position, 1);
             currentState = RobotState.Dying;
-            Destroy(gameObject); //TODO: decide if object pooling would be better than destroy/instantiate
         }
     }
 
