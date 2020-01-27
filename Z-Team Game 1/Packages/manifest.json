@@ -2,7 +2,6 @@
   "dependencies": {
     "com.unity.2d.pixel-perfect": "1.0.1-preview",
     "com.unity.2d.sprite": "1.0.0",
-    "com.unity.collab-proxy": "1.2.16",
     "com.unity.package-manager-ui": "2.2.0",
     "com.unity.textmeshpro": "2.0.1",
     "com.unity.timeline": "1.1.0",
