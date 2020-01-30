@@ -24,7 +24,7 @@ public class ZBuck : MonoBehaviour
         timer = 0;
         state = ZBuckState.Entering;
         this.value = value;
-        player = GameManager.Instance.Player;
+        player = GameManager.Instance.player;
     }
 
     // Update is called once per frame

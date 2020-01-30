@@ -19,7 +19,8 @@ public class Robot : Targetable
     private const float CHARGE_TIMER_MAX = 0.5f;
     private const float PERFORM_TIMER_MAX = 0.5f;
     private const float RECOVERY_TIMER_MAX = 0.5f;
-    private const float ATTACK_RANGE = 16;
+    private const float ATTACK_RANGE = 100;
+    private const ushort ATTACK_DAMAGE = 1;
     private const float CHARGE_ROTATION_SPEED = 100f;
     private const float PERFORM_MOVE_SPEED = 10f;
     private const short SEARCH_RADIUS = 20;
@@ -53,7 +54,7 @@ public class Robot : Targetable
         attackTimer = 0;
         currentState = RobotState.Moving;
         currentAttackState = RobotAttackState.Charging;
-        Target = GameManager.Instance.Player;
+        Target = GameManager.Instance.player;
         hitboxObj.SetActive(false);
     }
 
@@ -85,7 +86,7 @@ public class Robot : Targetable
                 {
                     //If still  null, assign to player
                     if ((Target = FindTarget()) == null)
-                        Target = GameManager.Instance.Player;
+                        Target = GameManager.Instance.player;
                     agent.destination = Target.transform.position;
                 }
                 //The target is moveable, so continuously update the position
@@ -111,7 +112,7 @@ public class Robot : Targetable
                     case RobotAttackState.Charging:
                         attackTimer += Time.deltaTime;
 
-                        //Rotate towards player
+                        //Rotate towards target
                         Vector3 direction = (Target.transform.position - transform.position).normalized;
                         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
                         transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * CHARGE_ROTATION_SPEED);
@@ -132,7 +133,7 @@ public class Robot : Targetable
                         //Move in attack direction
                         agent.velocity = attackDirection * PERFORM_MOVE_SPEED;
 
-                        if(attackTimer > PERFORM_TIMER_MAX)
+                        if (attackTimer > PERFORM_TIMER_MAX)
                         {
                             attackTimer = 0;
                             hitboxObj.SetActive(false);
@@ -180,6 +181,7 @@ public class Robot : Targetable
         Collider closest = null;
         float shortestDist = float.MaxValue;
         float sqrDist = 0;
+        Debug.Log("towers found: " + result);
         for(int i = 0; i < result; i++)
         {
             sqrDist = Vector3.SqrMagnitude(transform.position - overlapSphereCols[i].transform.position);

@@ -4,7 +4,18 @@ using UnityEngine;
 
 public class Tower : Targetable
 {
+    public enum TowerState
+    {
+        Alive,
+        Dying
+    }
+
+    public TowerState currentState = TowerState.Alive;
+
     private const int SEARCH_RADIUS = 25;
+    private const int MAX_HEALTH = 5;
+
+    private int health = MAX_HEALTH;
     public Targetable Target { get; set; }
     Collider[] overlapSphereCols;
     public float newTargetTimer;
@@ -35,46 +46,79 @@ public class Tower : Targetable
     // Update is called once per frame
     void Update()
     {
-        //Search for a nearby tower
-        if (newTargetTimer > 10)
+        switch (currentState) 
         {
-            Targetable newTarget = FindTarget();
-            if (newTarget != null)
-            {
-                Target = newTarget;
-                newTargetTimer = 0.0f;
-                trackingTarget = true;
-            }
+            case TowerState.Alive:
+                //Search for a nearby tower
+                if (newTargetTimer > 10)
+                {
+                    Targetable newTarget = FindTarget();
+                    if (newTarget != null)
+                    {
+                        Target = newTarget;
+                        newTargetTimer = 0.0f;
+                        trackingTarget = true;
+                    }
+                }
+
+
+                if (Target == null)
+                {
+                    if ((Target = FindTarget()) == null)
+                        trackingTarget = false;
+                }
+                else if (Target.IsMoveable)
+                {
+                    Aim();
+                    if (timeSinceLastShot > SHOOT_LIMIT)
+                    {
+                        Shoot();
+                        timeSinceLastShot = 0.0f;
+                    }
+                }
+
+
+                if (timeSinceLastShot > .25f)
+                {
+                    shootSprite.SetActive(false);
+                }
+
+                //Update Timer
+                newTargetTimer += Time.deltaTime;
+                timeSinceLastShot += Time.deltaTime;
+                break;
+            case TowerState.Dying:
+                GameManager.Instance.RemoveTower(this);
+                Destroy(this);
+                break;
+            default:
+                Debug.LogError("Reached unknown TowerState");
+                break;
         }
-
-
-        if (Target == null)
-        {
-            if ((Target = FindTarget()) == null)
-                trackingTarget = false;
-        }
-        else if (Target.IsMoveable)
-        {
-            Aim();
-            if (timeSinceLastShot > SHOOT_LIMIT)
-            {
-                Shoot();
-                timeSinceLastShot = 0.0f;
-            }
-        }
-
-
-        if (timeSinceLastShot > .25f)
-        {
-            shootSprite.SetActive(false);
-        }
-
-        //Update Timer
-        newTargetTimer += Time.deltaTime;
-        timeSinceLastShot += Time.deltaTime;
-
     }
 
+    /// <summary>
+    /// Have this tower take damage
+    /// </summary>
+    /// <param name="damageAmount">The amount of damage to apply</param>
+    public void TakeDamage(ushort damageAmount)
+    {
+        health -= damageAmount;
+
+        if (health < 1)
+        {
+            currentState = TowerState.Dying;
+        }
+        Debug.Log("Tower Health: " + health);
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "RobotHitbox")
+        {
+            TakeDamage(GameManager.ROBOT_ATTACK_DAMAGE);
+        }
+    }
 
     private Targetable FindTarget()
     {

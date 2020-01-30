@@ -7,13 +7,14 @@ public enum GameState { Starting, Playing, Paused, Ended }
 public class GameManager : Singleton<GameManager>
 {
 	public const float CONSTANT_Y_POS = -0.92f;
+    public const ushort ROBOT_ATTACK_DAMAGE = 1;
 
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
     [SerializeField] GameObject robotPrefab;
     [SerializeField] GameObject towerPrefab;
     [SerializeField] GameObject zbuckPrefab;
 
-    public Player Player { get; private set; }
+    public Player player { get; private set; }
 
     /// <summary>
     /// The current state of the game
@@ -28,13 +29,13 @@ public class GameManager : Singleton<GameManager>
     {
         towers = new List<GameObject>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
+        player = GameObject.FindObjectOfType<Player>();
     }
 
     // Start is called before the first frame update
     void Start()
     {
         NewGame();
-        Player = GameObject.FindObjectOfType<Player>();
     }
 
     /// <summary>
@@ -44,6 +45,7 @@ public class GameManager : Singleton<GameManager>
     {
         CurrentState = GameState.Starting;
         robotManager.Start();
+        player.Init();
 
         //Remove any towers
         foreach (var t in towers)
@@ -85,6 +87,10 @@ public class GameManager : Singleton<GameManager>
                 break;
 
             case GameState.Ended:
+                if (Input.GetKeyDown(KeyCode.R))
+                {
+                    NewGame();
+                }
                 break;
 
             default:
@@ -101,6 +107,14 @@ public class GameManager : Singleton<GameManager>
     public void SpawnTower(Vector3 position, Quaternion rotation)
     {
         towers.Add(Instantiate(towerPrefab, position, rotation));
+    }
+
+    /// <summary>
+    /// Remove the tower from the list
+    /// </summary>
+    public void RemoveTower(Tower tower)
+    {
+        towers.Remove(tower.gameObject);
     }
 
     /// <summary>

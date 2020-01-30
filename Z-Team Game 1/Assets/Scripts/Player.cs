@@ -4,28 +4,30 @@ using UnityEngine;
 
 public class Player : Targetable
 {
-    private enum PlayerState
+    public enum PlayerState
     {
         Alive,
+        Dying,
         Dead
     }
 
     private const float MOVE_SPEED = 30.0f;
     private const float ROTATION_SPEED = 10.0f;
-    private const int MAX_HEALTH = 5;
+    private const int MAX_HEALTH = 10;
     public const short ZBUCK_COLLECTION_RADIUS = 50;
     private const ushort TOWER_PRICE = 10;
 
     public uint ZBucks { get; private set; }
+    public PlayerState currentState = PlayerState.Dead;
 
     private GameObject placeObj;
-    private PlayerState currentState = PlayerState.Dead;
+    private BoxCollider boxCollider;
     private Vector3 moveDirection = Vector3.zero;
-    private Vector3 targetDirection = Vector3.zero;
     private float leftBound;
     private float topBound;
     private float rightBound;
     private float bottomBound;
+    private int health = 0;
     bool isPlacing;
 
     private void Awake()
@@ -33,10 +35,8 @@ public class Player : Targetable
         IsMoveable = true;
         isPlacing = false;
         placeObj = transform.Find("TowerPlacement").gameObject;
-    }
+        boxCollider = GetComponent<BoxCollider>();
 
-    private void Start()
-    {
         float spriteWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x;
 
         Transform groundTransform = GameObject.Find("GameManager/Ground").transform;
@@ -48,19 +48,6 @@ public class Player : Targetable
         rightBound = groundTransform.position.x + groundRenderer.bounds.extents.x - spriteHalfWidth;
         bottomBound = groundTransform.position.z - groundRenderer.bounds.extents.z + spriteHalfWidth;
         topBound = groundTransform.position.z + groundRenderer.bounds.extents.z - spriteHalfWidth;
-
-        Init();
-    }
-
-    public void Init()
-    {
-        currentState = PlayerState.Alive;
-
-        transform.rotation = Quaternion.Euler(0, Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg + 180.0f, 0);
-
-        placeObj.SetActive(false);
-
-        ZBucks = TOWER_PRICE;
     }
 
     // Update is called once per frame
@@ -100,6 +87,11 @@ public class Player : Targetable
                 }
                 break;
 
+            case PlayerState.Dying:
+                gameObject.SetActive(false);
+                currentState = PlayerState.Dead;
+                break;
+
             case PlayerState.Dead:
                 break;
 
@@ -109,11 +101,64 @@ public class Player : Targetable
         }
     }
 
+    /// <summary>
+    /// Initialize the player at the start of each round.
+    /// </summary>
+    public void Init()
+    {
+        gameObject.SetActive(true);
+
+        currentState = PlayerState.Alive;
+
+        health = MAX_HEALTH;
+
+        transform.position = Vector3.zero;
+        transform.rotation = Quaternion.Euler(0, Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg + 180.0f, 0);
+
+        placeObj.SetActive(false);
+
+        ZBucks = TOWER_PRICE;
+    }
+
+    /// <summary>
+    /// Have the player take damange
+    /// </summary>
+    /// <param name="damageAmount">The amount of damage to apply</param>
+    public void TakeDamage(ushort damageAmount)
+    {
+        health -= damageAmount;
+
+        if (health < 1)
+        {
+            currentState = PlayerState.Dying;
+        }
+    }
+
+    /// <summary>
+    /// Add an amount of zbucks to the player
+    /// </summary>
+    /// <param name="amount">Amount to add</param>
+    public void AddZBucks(ushort amount)
+    {
+        ZBucks += amount;
+    }
+    
+    /// <summary>
+    /// Move the character
+    /// </summary>
     private void FixedUpdate()
     {
         if (currentState == PlayerState.Alive)
         {
             Move();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "RobotHitbox")
+        {
+            TakeDamage(GameManager.ROBOT_ATTACK_DAMAGE);
         }
     }
 
@@ -192,15 +237,6 @@ public class Player : Targetable
         }
 
         transform.position = newTransform;
-    }
-
-    /// <summary>
-    /// Add an amount of zbucks to the player
-    /// </summary>
-    /// <param name="amount">Amount to add</param>
-    public void AddZBucks(ushort amount)
-    {
-        ZBucks += amount;
     }
 
 #if UNITY_EDITOR
