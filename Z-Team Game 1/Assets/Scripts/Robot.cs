@@ -199,7 +199,7 @@ public class Robot : Targetable
     public void TakeDamage(short damageAmount)
     {
         health -= damageAmount;
-        if (health < 0)
+        if (health < 1)
         {
             RobotManager.DecrementRobotCount();
             GameManager.Instance.SpawnZBucks(2, transform.position, 1);
