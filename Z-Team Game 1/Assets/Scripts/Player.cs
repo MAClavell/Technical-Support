@@ -13,6 +13,10 @@ public class Player : Targetable
     private const float MOVE_SPEED = 30.0f;
     private const float ROTATION_SPEED = 10.0f;
     private const int MAX_HEALTH = 5;
+    public const short ZBUCK_COLLECTION_RADIUS = 50;
+    private const ushort TOWER_PRICE = 10;
+
+    public uint ZBucks { get; private set; }
 
     private GameObject placeObj;
     private PlayerState currentState = PlayerState.Dead;
@@ -55,6 +59,8 @@ public class Player : Targetable
         transform.rotation = Quaternion.Euler(0, Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg + 180.0f, 0);
 
         placeObj.SetActive(false);
+
+        ZBucks = TOWER_PRICE;
     }
 
     // Update is called once per frame
@@ -118,7 +124,7 @@ public class Player : Targetable
     {
         if (moveDirection != Vector3.zero)
         {
-            transform.position = transform.position + (moveDirection * MOVE_SPEED * Time.fixedDeltaTime);
+            transform.position = transform.position + moveDirection * MOVE_SPEED * Time.fixedDeltaTime;
 
             LerpSpriteRotation();
             // RotateSprite();
@@ -187,4 +193,21 @@ public class Player : Targetable
 
         transform.position = newTransform;
     }
+
+    /// <summary>
+    /// Add an amount of zbucks to the player
+    /// </summary>
+    /// <param name="amount">Amount to add</param>
+    public void AddZBucks(ushort amount)
+    {
+        ZBucks += amount;
+    }
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, Mathf.Sqrt(ZBUCK_COLLECTION_RADIUS));
+    }
+#endif
 }

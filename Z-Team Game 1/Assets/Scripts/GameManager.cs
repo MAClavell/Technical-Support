@@ -6,12 +6,12 @@ public enum GameState { Starting, Playing, Paused, Ended }
 
 public class GameManager : Singleton<GameManager>
 {
-	public static readonly float CONSTANT_Y_POS = -0.92f;
-	public static readonly ushort MAX_TOWERS = 100;
+	public const float CONSTANT_Y_POS = -0.92f;
 
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
     [SerializeField] GameObject robotPrefab;
     [SerializeField] GameObject towerPrefab;
+    [SerializeField] GameObject zbuckPrefab;
 
     public Player Player { get; private set; }
 
@@ -27,7 +27,6 @@ public class GameManager : Singleton<GameManager>
     private void Awake()
     {
         towers = new List<GameObject>();
-        Player = GameObject.FindObjectOfType<Player>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
     }
 
@@ -35,6 +34,7 @@ public class GameManager : Singleton<GameManager>
     void Start()
     {
         NewGame();
+        Player = GameObject.FindObjectOfType<Player>();
     }
 
     /// <summary>
@@ -75,6 +75,9 @@ public class GameManager : Singleton<GameManager>
                 //Press 'R' to add zombies (debug only)
                 if (Input.GetKeyDown(KeyCode.R))
                     robotManager.Spawn();
+
+                if (Input.GetKeyDown(KeyCode.T))
+                    SpawnZBucks(2, Vector3.zero, 1);
 #endif
                 break;
 
@@ -90,9 +93,34 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// Spawns a tower into the world
+    /// </summary>
+    /// <param name="position">Position to spawn at</param>
+    /// <param name="rotation">Rotation to spawn at</param>
     public void SpawnTower(Vector3 position, Quaternion rotation)
     {
         towers.Add(Instantiate(towerPrefab, position, rotation));
+    }
+
+    /// <summary>
+    /// Spawn an amount of zbucks at a position
+    /// </summary>
+    /// <param name="amount">The amount to spawn</param>
+    /// <param name="position">The center position</param>
+    /// <param name="valuePerBuck">The value of each spawned zbuck</param>
+    public void SpawnZBucks(ushort amount, Vector3 position, ushort valuePerBuck)
+    {
+        for(ushort i = 0; i < amount; i++)
+        {
+            //TODO: stop coins from going offscreen
+            float angle = Random.Range(0, 360);
+            Quaternion rotation = Quaternion.Euler(90, 0, angle);
+            Vector3 target = position + (rotation * new Vector3(1, CONSTANT_Y_POS, 0));
+            
+            //Initialize the zbuck
+            Instantiate(zbuckPrefab, position, rotation).GetComponent<ZBuck>().Init(target, valuePerBuck);
+        }
     }
 
 #if UNITY_EDITOR
