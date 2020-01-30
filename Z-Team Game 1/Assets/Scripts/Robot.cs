@@ -22,7 +22,7 @@ public class Robot : Targetable
     private const float ATTACK_RANGE = 16;
     private const float CHARGE_ROTATION_SPEED = 100f;
     private const float PERFORM_MOVE_SPEED = 10f;
-    private const short SEARCH_RADIUS = 20;
+    private const short SEARCH_RADIUS = 15;
     private const short MAX_HEALTH = 3;
     private const ushort MAX_TOWERS_TO_SEARCH = 20;
 
@@ -156,8 +156,8 @@ public class Robot : Targetable
                 }
                 break;
 
+            //TODO: death animations?
             case RobotState.Dying:
-                Destroy(gameObject); //TODO: decide if object pooling would be better than destroy/instantiate
                 break;
 
             default:
@@ -202,8 +202,9 @@ public class Robot : Targetable
         if (health < 1)
         {
             RobotManager.DecrementRobotCount();
-            GameManager.Instance.SpawnZBucks(2, transform.position, 1);
-            currentState = RobotState.Dying;
+            GameManager.Instance.SpawnZBucks((ushort)Random.Range(1, 3), transform.position, 1);
+            currentState = RobotState.Dying; //TODO: death animations?
+            Destroy(gameObject); //TODO: decide if object pooling would be better than destroy/instantiate
         }
     }
 

@@ -167,7 +167,7 @@ GameObject:
   - component: {fileID: 1644227793015414228}
   - component: {fileID: 3892456939492117095}
   m_Layer: 0
-  m_Name: TowerPlacement
+  m_Name: TowerGhost
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
