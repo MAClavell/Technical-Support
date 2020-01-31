@@ -7,7 +7,6 @@ public enum GameState { Starting, Playing, Paused, Ended }
 public class GameManager : Singleton<GameManager>
 {
 	public const float CONSTANT_Y_POS = -0.92f;
-	// Put here temporarilly for convenience
     public const ushort ROBOT_ATTACK_DAMAGE = 1;
 
     [SerializeField] RobotSpawnZone[] robotSpawnZones;

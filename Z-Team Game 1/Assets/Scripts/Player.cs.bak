@@ -40,6 +40,8 @@ public class Player : Targetable
     private float bottomBound;
 
     private int health = 0;
+
+    bool isBuilding;
     bool isBuilding;
 
     private void Awake()
@@ -95,23 +97,23 @@ public class Player : Targetable
                 moveDirection.z = Input.GetAxisRaw("Vertical");
                 moveDirection.Normalize();
 
-                //Placing towers
-		        if(Input.GetKeyDown(KeyCode.Space))
-		        {
-		            //Show shadow of tower before placing
-		            if(!isBuilding)
-		                SetBuildMode(true);
-		            //Place the tower
-		            else if(ZBucks >= TOWER_PRICE)
-		            {
-                        RemoveZBucks(TOWER_PRICE);
-		                GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
-		                SetBuildMode(false);
-		            }
-		        }
-		        //Cancel placement
-		        else if(isBuilding && Input.GetKeyDown(KeyCode.F))
-		            SetBuildMode(false);
+                        //Placing towers
+        if(Input.GetKeyDown(KeyCode.Space))
+        {
+            //Show shadow of tower before placing
+            if(!isBuilding)
+                SetBuildMode(true);
+            //Place the tower
+            else if(ZBucks >= TOWER_PRICE)
+            {
+                ZBucks -= TOWER_PRICE;
+                GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
+                SetBuildMode(false);
+            }
+        }
+        //Cancel placement
+        else if(isBuilding && Input.GetKeyDown(KeyCode.F))
+            SetBuildMode(false);
                 break;
 
             case PlayerState.Dying:
@@ -166,21 +168,20 @@ public class Player : Targetable
         {
             Move();
         }
-        // Commented all this out because all of this logic is in update where it is also hooked up to input
-        ////Show shadow of tower before placing
-        //if(!isBuilding) {
-        //    SetBuildMode(true);
-        //}
-        ////Place the tower
-        //else if(ZBucks >= TOWER_PRICE)
-        //{
-        //    ZBucks -= TOWER_PRICE;
-        //    GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
-        //    SetBuildMode(false);
-        //}
-        ////Cancel placement
-        //else if(isBuilding && Input.GetKeyDown(KeyCode.F))
-        //    SetBuildMode(false);
+        //Show shadow of tower before placing
+        if(!isBuilding) {
+            SetBuildMode(true);
+        }
+        //Place the tower
+        else if(ZBucks >= TOWER_PRICE)
+        {
+            ZBucks -= TOWER_PRICE;
+            GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
+            SetBuildMode(false);
+        }
+        //Cancel placement
+        else if(isBuilding && Input.GetKeyDown(KeyCode.F))
+            SetBuildMode(false);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -297,17 +298,6 @@ public class Player : Targetable
         }
 
         transform.position = newTransform;
-    }
-
-    /// <summary>
-    /// Remove an amount of zbucks from the player
-    /// </summary>
-    /// <param name="amount">Amount to add</param>
-    public void RemoveZBucks(ushort amount)
-    {
-        ZBucks -= amount;
-
-        UpdateZBucksDisplay();
     }
 
     /// <summary>

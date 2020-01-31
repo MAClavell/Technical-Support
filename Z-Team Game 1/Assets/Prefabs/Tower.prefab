@@ -217,7 +217,6 @@ MonoBehaviour:
   newTargetTimer: 0
   trackingTarget: 0
   notTracking: 0
-  spriteObj: {fileID: 5579768527642751083}
 --- !u!208 &1616226745830793264
 NavMeshObstacle:
   m_ObjectHideFlags: 0
@@ -464,7 +463,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ratio: 0
-  hide: 0
+  hide: 1
 --- !u!1 &7378176615995480536
 GameObject:
   m_ObjectHideFlags: 0
