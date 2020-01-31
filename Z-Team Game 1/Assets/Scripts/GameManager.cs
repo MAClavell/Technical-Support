@@ -123,7 +123,7 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public void RemoveTower(Tower tower)
     {
-        towers.Remove(tower.gameObject);
+        towers.Remove(tower);
     }
 
     /// <summary>

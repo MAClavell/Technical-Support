@@ -20,9 +20,6 @@ public class Player : Targetable
 
     private readonly Color green = new Color(125f/255f, 1f, 100f/255f, 110f/255f);
     private readonly Color red = new Color(1, 100f/255f, 115f/255f, 110f/255f);
-    private const float MOVE_SPEED = 30.0f;
-    public const short ZBUCK_COLLECTION_RADIUS = 50;
-    private const ushort TOWER_PRICE = 3;
     private const ushort TOWER_UPGRADE_PRICE = 2;
 
     public uint ZBucks { get; private set; }

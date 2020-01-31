@@ -10,10 +10,10 @@ GameObject:
   m_Component:
   - component: {fileID: 2465843020541932301}
   - component: {fileID: 2442429657187698881}
-  - component: {fileID: 1327973494325452060}
   - component: {fileID: 288253957676824734}
+  - component: {fileID: 1327973494325452060}
   m_Layer: 9
-  m_Name: Tower 1
+  m_Name: Tower_BackUp
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -50,10 +50,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentState: 0
   healthBar: {fileID: 26920005923877599}
+  timeSinceLastShot: 0
   newTargetTimer: 0
   trackingTarget: 0
   notTracking: 0
-  timeSinceLastShot: 0
+  spriteObj: {fileID: 0}
+--- !u!208 &288253957676824734
+NavMeshObstacle:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 55286852965087405}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Shape: 0
+  m_Extents: {x: 3, y: 0.25, z: 3}
+  m_MoveThreshold: 0.1
+  m_Carve: 1
+  m_CarveOnlyStationary: 1
+  m_Center: {x: 0, y: 0, z: 0}
+  m_TimeToStationary: 0.5
 --- !u!135 &1327973494325452060
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -67,22 +84,6 @@ SphereCollider:
   serializedVersion: 2
   m_Radius: 3
   m_Center: {x: 0, y: 0, z: 0}
---- !u!208 &288253957676824734
-NavMeshObstacle:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 55286852965087405}
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Shape: 0
-  m_Extents: {x: 1.5, y: 0.25, z: 1.5}
-  m_MoveThreshold: 0.1
-  m_Carve: 1
-  m_CarveOnlyStationary: 1
-  m_Center: {x: 0, y: 0, z: 0}
-  m_TimeToStationary: 0.5
 --- !u!1 &300025140883618743
 GameObject:
   m_ObjectHideFlags: 0

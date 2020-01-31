@@ -29,21 +29,16 @@ public class Tower : Targetable
     public bool notTracking;
     private short DAMAGE_AMOUNT = 1;
     [SerializeField]
-    private float timeSinceLastShot;
-    private const float SHOOT_LIMIT = 1.5f;
     private GameObject spriteObj;
 
     Collider[] overlapSphereCols;
     private GameObject shootSprite;
     private GameObject radiusDisplay;
-    private short DAMAGE_AMOUNT = 1;
 
     //Initialize vars
     private void Awake()
     {
-
         float zRotation = transform.localRotation.eulerAngles.y;
-        Debug.Log("zRot: " + zRotation);
         transform.Rotate(new Vector3(0.0f, 0.0f, zRotation));
         spriteObj = transform.Find("Sprite").gameObject;
         spriteObj.transform.Rotate(new Vector3(0.0f, 0.0f, -zRotation));
@@ -54,16 +49,14 @@ public class Tower : Targetable
         healthBar.Init();
         SetHealth(MAX_HEALTH);
 
-        shootSprite = transform.Find("bigBullet").gameObject;
+        shootSprite = transform.Find("Sprite/bigBullet").gameObject;
         radiusDisplay = transform.Find("RadiusDisplay").gameObject;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-
         //Set radius display to the range
-
         radiusDisplay.transform.localScale = new Vector3(SEARCH_RADIUS_SQRT, SEARCH_RADIUS_SQRT, SEARCH_RADIUS_SQRT);
 
         shootSprite.SetActive(false);
@@ -151,10 +144,6 @@ public class Tower : Targetable
         }
     }
 
-
-
-
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.tag == "RobotHitbox")
@@ -184,7 +173,6 @@ public class Tower : Targetable
         return closest?.GetComponent<Targetable>();
     }
 
-
     public void Aim()
     {
         spriteObj.transform.LookAt(new Vector3(Target.transform.position.x, transform.position.y, Target.transform.position.z));
@@ -204,7 +192,6 @@ public class Tower : Targetable
         timeSinceLastShot = 0.0f;
 
         //Display Shot
-
         shootSprite.SetActive(true);
 
     }
