@@ -5,6 +5,10 @@ using UnityEngine.AI;
 
 public class Robot : Targetable
 {
+    /// <summary>
+    /// Object pooling index. DO NOT MODIFY
+    /// </summary>
+    public ushort Index { get; set; }
     private enum RobotState { Moving, Attacking, Dying }
     private enum RobotAttackState { Charging, Performing, Recovery}
 
@@ -20,12 +24,11 @@ public class Robot : Targetable
     private const float PERFORM_TIMER_MAX = 0.5f;
     private const float RECOVERY_TIMER_MAX = 0.5f;
     private const float ATTACK_RANGE = 100;
-    private const ushort ATTACK_DAMAGE = 1;
     private const float CHARGE_ROTATION_SPEED = 100f;
     private const float PERFORM_MOVE_SPEED = 10f;
     private const short SEARCH_RADIUS = 15;
     private const short MAX_HEALTH = 3;
-    private const ushort MAX_TOWERS_TO_SEARCH = 20;
+    private const ushort MAX_TOWERS_TO_SEARCH = 5;
 
     Collider[] overlapSphereCols;
     private NavMeshAgent agent;
@@ -44,11 +47,18 @@ public class Robot : Targetable
         agent = GetComponent<NavMeshAgent>();
         hitboxObj = transform.Find("Hitbox").gameObject;
         IsMoveable = true;
+        gameObject.SetActive(false);
     }
 
-    // Start is called before the first frame update
-    void Start()
+    /// <summary>
+	/// Init the robot to its starting state
+	/// </summary>
+    public void Init(ushort index, Vector3 position)
     {
+        Index = index;
+        gameObject.SetActive(true);
+        transform.position = position;
+        transform.rotation = Quaternion.identity;
         health = MAX_HEALTH;
         searchTimer = 0;
         attackTimer = 0;
@@ -212,10 +222,10 @@ public class Robot : Targetable
         health -= damageAmount;
         if (health < 1)
         {
-            RobotManager.DecrementRobotCount();
             GameManager.Instance.SpawnZBucks((ushort)Random.Range(1, 3), transform.position, 1);
             currentState = RobotState.Dying; //TODO: death animations?
-            Destroy(gameObject); //TODO: decide if object pooling would be better than destroy/instantiate
+            RobotManager.DecrementRobotCount(Index);
+            gameObject.SetActive(false);
         }
     }
 

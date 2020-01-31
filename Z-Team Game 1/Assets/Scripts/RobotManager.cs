@@ -2,15 +2,19 @@
 
 class RobotManager
 {
-	private delegate void DecrementRobotDelegate();
+	//Events and delegates
+	private delegate void DecrementRobotDelegate(ushort index);
 	private static event DecrementRobotDelegate decrementRobotEvent;
 
+	//Spawning
+	private Robot[] robots;
 	private RobotSpawnZone[] spawnZones;
 	private GameObject robotPrefab;
+	private ushort currIndex;
 
 	//Robot spawning
-	public const uint MAX_ROBOTS = 500;
 	private const uint SPAWN_TIME_DIVISOR = 10; //adds one more zombie for time / N. If N=10, then 20 seconds would add 2+1 robots
+	public const ushort MAX_ROBOTS = 500;
 	private uint currAmount;
 	private uint toSpawn;
 	private uint maxToSpawnPerFrame;
@@ -34,10 +38,29 @@ class RobotManager
 		this.robotPrefab = robotPrefab;
 
 		//Setup event
-		decrementRobotEvent += () => currAmount--;
+		decrementRobotEvent += (index) =>
+		{
+			currAmount--;
+			
+			//Swap the last spawned robot with this newly dead one
+			int swapInd = (currIndex - 1) % MAX_ROBOTS;
+			Robot temp = robots[swapInd];
+			robots[swapInd] = robots[index];
+			robots[index] = temp;
+			robots[index].Index = index;
+			currIndex--;
+		};
 
 		//Find spawn zones
 		this.spawnZones = spawnZones;
+
+		//Instantiate all robots
+		currIndex = 0;
+		robots = new Robot[MAX_ROBOTS];
+		for(int i = 0; i < MAX_ROBOTS; i++)
+		{
+			robots[i] = GameObject.Instantiate(robotPrefab).GetComponent<Robot>();
+		}
 	}
 
 	/// <summary>
@@ -102,15 +125,16 @@ class RobotManager
 	private void Spawn()
 #endif
 	{
-		Object.Instantiate(robotPrefab, spawnZones[Random.Range(0, spawnZones.Length)].GetRandomPointInZone(), Quaternion.identity);
+		robots[currIndex].Init(currIndex, spawnZones[Random.Range(0, spawnZones.Length)].GetRandomPointInZone());
+		currIndex = (ushort)((currIndex + 1) % MAX_ROBOTS);
 		currAmount++;
 	}
 
 	/// <summary>
 	/// Decrement the robot count by 1
 	/// </summary>
-	public static void DecrementRobotCount()
+	public static void DecrementRobotCount(ushort index)
 	{
-		decrementRobotEvent?.Invoke();
+		decrementRobotEvent?.Invoke(index);
 	}
 }

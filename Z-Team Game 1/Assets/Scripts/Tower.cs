@@ -68,7 +68,7 @@ public class Tower : Targetable
         switch (currentState)
         {
             case TowerState.Alive:
-                //Search for a nearby tower
+                //Search for a nearby robot
                 if (newTargetTimer > 10)
                 {
                     Targetable newTarget = FindTarget();
@@ -80,7 +80,7 @@ public class Tower : Targetable
                     }
                 }
 
-                if (Target == null)
+                if (Target == null || !Target.gameObject.activeSelf)
                 {
                     if ((Target = FindTarget()) == null)
                         trackingTarget = false;
@@ -181,7 +181,7 @@ public class Tower : Targetable
     public void Shoot()
     {
         //Make sure that the target has not been destroyed by another tower
-        if (Target != null)
+        if (Target != null && Target.gameObject.activeSelf)
         {
             //Cast the object into a Robot
             Robot currentRobot = (Robot)Target;
