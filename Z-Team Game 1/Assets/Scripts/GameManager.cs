@@ -21,13 +21,13 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public GameState CurrentState { get; private set; }
 
-    private List<GameObject> towers;
+    private List<Tower> towers;
     private RobotManager robotManager;
 
     //Initialize vars
     private void Awake()
     {
-        towers = new List<GameObject>();
+        towers = new List<Tower>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
         player = GameObject.FindObjectOfType<Player>();
     }
@@ -49,7 +49,7 @@ public class GameManager : Singleton<GameManager>
 
         //Remove any towers
         foreach (var t in towers)
-           Destroy(t);
+           Destroy(t.gameObject);
         towers.Clear();
     }
 
@@ -115,7 +115,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="rotation">Rotation to spawn at</param>
     public void SpawnTower(Vector3 position, Quaternion rotation)
     {
-        towers.Add(Instantiate(towerPrefab, position, rotation));
+        towers.Add(Instantiate(towerPrefab, position, rotation).GetComponent<Tower>());
     }
 
     /// <summary>
@@ -143,6 +143,18 @@ public class GameManager : Singleton<GameManager>
             
             //Initialize the zbuck
             Instantiate(zbuckPrefab, position, rotation).GetComponent<ZBuck>().Init(target, valuePerBuck);
+        }
+    }
+
+    /// <summary>
+    /// Sets the build mode setting (display the radius of all turrets)
+    /// </summary>
+    /// <param name="buildOn">Whether build mode is on or not</param>
+    public void SetBuildMode(bool buildOn)
+    {
+        foreach(Tower t in towers)
+        {
+            t.SetBuildMode(buildOn);
         }
     }
 

@@ -17,8 +17,13 @@ public class Tower : Targetable
     private const int MAX_HEALTH = 5;
 
     private int health;
+    private const float SHOOT_LIMIT = 1.5f;
+    public static readonly float SEARCH_RADIUS_SQRT = Mathf.Sqrt(SEARCH_RADIUS);
+
+    [SerializeField]
+    private float timeSinceLastShot;
+
     public Targetable Target { get; set; }
-    Collider[] overlapSphereCols;
     public float newTargetTimer;
     public bool trackingTarget;
     public bool notTracking;
@@ -27,12 +32,16 @@ public class Tower : Targetable
     private float timeSinceLastShot;
     private const float SHOOT_LIMIT = 1.5f;
     private GameObject spriteObj;
+
+    Collider[] overlapSphereCols;
     private GameObject shootSprite;
+    private GameObject radiusDisplay;
+    private short DAMAGE_AMOUNT = 1;
 
     //Initialize vars
     private void Awake()
     {
-        
+
         float zRotation = transform.localRotation.eulerAngles.y;
         Debug.Log("zRot: " + zRotation);
         transform.Rotate(new Vector3(0.0f, 0.0f, zRotation));
@@ -44,19 +53,27 @@ public class Tower : Targetable
         overlapSphereCols = new Collider[RobotManager.MAX_ROBOTS];
         healthBar.Init();
         SetHealth(MAX_HEALTH);
+
+        shootSprite = transform.Find("bigBullet").gameObject;
+        radiusDisplay = transform.Find("RadiusDisplay").gameObject;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        shootSprite = transform.Find("bigBullet").gameObject;
+
+        //Set radius display to the range
+
+        radiusDisplay.transform.localScale = new Vector3(SEARCH_RADIUS_SQRT, SEARCH_RADIUS_SQRT, SEARCH_RADIUS_SQRT);
+
         shootSprite.SetActive(false);
-    } 
+        radiusDisplay.SetActive(false);
+    }
 
     // Update is called once per frame
     void Update()
     {
-        switch (currentState) 
+        switch (currentState)
         {
             case TowerState.Alive:
                 //Search for a nearby tower
@@ -71,12 +88,14 @@ public class Tower : Targetable
                     }
                 }
 
-
                 if (Target == null)
                 {
                     if ((Target = FindTarget()) == null)
                         trackingTarget = false;
                 }
+                //If a target goes out of range, stop shooting at it
+                else if(Vector3.SqrMagnitude(transform.position - Target.transform.position) > SEARCH_RADIUS * SEARCH_RADIUS)
+                    Target = null;
                 else if (Target.IsMoveable)
                 {
                     Aim();
@@ -86,7 +105,6 @@ public class Tower : Targetable
                         timeSinceLastShot = 0.0f;
                     }
                 }
-
 
                 if (timeSinceLastShot > .25f)
                 {
@@ -132,6 +150,10 @@ public class Tower : Targetable
             currentState = TowerState.Dying;
         }
     }
+
+
+
+
 
     private void OnTriggerEnter(Collider other)
     {
@@ -186,4 +208,22 @@ public class Tower : Targetable
         shootSprite.SetActive(true);
 
     }
+
+    /// <summary>
+    /// Sets the build mode setting (display the radius of the turret)
+    /// </summary>
+    /// <param name="buildOn">Whether build mode is on or not</param>
+    public void SetBuildMode(bool buildOn)
+    {
+        radiusDisplay.SetActive(buildOn);
+    }
+
+
+#if UNITY_EDITOR
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, SEARCH_RADIUS);
+    }
+#endif
 }

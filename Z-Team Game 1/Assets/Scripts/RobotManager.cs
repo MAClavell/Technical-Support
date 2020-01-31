@@ -51,7 +51,7 @@ class RobotManager
 
 		totalTime = 0;
 		addPerFrameTimer = 0;
-		addTimer = 0;
+		addTimer = ADD_TIMER_MAX / 2;
 		spawnTimer = 0;
 	}
 

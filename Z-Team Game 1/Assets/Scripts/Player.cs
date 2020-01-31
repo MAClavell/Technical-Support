@@ -18,6 +18,13 @@ public class Player : Targetable
     public const short ZBUCK_COLLECTION_RADIUS = 50;
     private const ushort TOWER_PRICE = 10;
 
+    private readonly Color green = new Color(125f/255f, 1f, 100f/255f, 110f/255f);
+    private readonly Color red = new Color(1, 100f/255f, 115f/255f, 110f/255f);
+    private const float MOVE_SPEED = 30.0f;
+    public const short ZBUCK_COLLECTION_RADIUS = 50;
+    private const ushort TOWER_PRICE = 3;
+    private const ushort TOWER_UPGRADE_PRICE = 2;
+
     public uint ZBucks { get; private set; }
     public PlayerState currentState = PlayerState.Dead;
     public PlayerHealthBar healthBar;
@@ -25,13 +32,20 @@ public class Player : Targetable
 
     private GameObject placeObj;
     private BoxCollider boxCollider;
+    private SpriteRenderer towerGhost;
+    private Material towerRadiusMatInst;
+
     private Vector3 moveDirection = Vector3.zero;
+
     private float leftBound;
     private float topBound;
     private float rightBound;
     private float bottomBound;
+
     private int health = 0;
+
     bool isPlacing;
+    bool isBuilding;
 
     private void Awake()
     {
@@ -39,6 +53,11 @@ public class Player : Targetable
         isPlacing = false;
         placeObj = transform.Find("TowerPlacement").gameObject;
         boxCollider = GetComponent<BoxCollider>();
+
+        isBuilding = false;
+        towerGhost = transform.Find("TowerGhost").GetComponent<SpriteRenderer>();
+        towerGhost.transform.GetChild(0).localScale = new Vector3(Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT);
+        towerRadiusMatInst = towerGhost.GetComponentInChildren<MeshRenderer>().material;
 
         float spriteWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x;
 
@@ -119,7 +138,7 @@ public class Player : Targetable
         transform.position = Vector3.zero;
         transform.rotation = Quaternion.Euler(0, Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg + 180.0f, 0);
 
-        placeObj.SetActive(false);
+        towerGhost.gameObject.SetActive(false);
 
         ZBucks = TOWER_PRICE;
     }
@@ -153,24 +172,6 @@ public class Player : Targetable
     }
 
     /// <summary>
-    /// Add an amount of zbucks to the player
-    /// </summary>
-    /// <param name="amount">Amount to add</param>
-    public void AddZBucks(ushort amount)
-    {
-        ZBucks += amount;
-        UpdateZBucksDisplay();
-    }
-
-    /// <summary>
-    /// Update the zBucks display
-    /// </summary>
-    public void UpdateZBucksDisplay()
-    {
-        zBucksCounter.text = ZBucks.ToString();
-    }
-
-    /// <summary>
     /// Move the character
     /// </summary>
     private void FixedUpdate()
@@ -179,6 +180,20 @@ public class Player : Targetable
         {
             Move();
         }
+        //Show shadow of tower before placing
+        if(!isBuilding) {
+            SetBuildMode(true);
+        }
+        //Place the tower
+        else if(ZBucks >= TOWER_PRICE)
+        {
+            ZBucks -= TOWER_PRICE;
+            GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
+            SetBuildMode(false);
+        }
+        //Cancel placement
+        else if(isBuilding && Input.GetKeyDown(KeyCode.F))
+            SetBuildMode(false);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -240,6 +255,36 @@ public class Player : Targetable
         transform.Rotate(Vector3.up, angleOffset);
     }
 
+    /// Turn on or off build mode for the player
+    /// </summary>
+    /// <param name="buildOn">What mode to set</param>
+    private void SetBuildMode(bool buildOn)
+    {
+        isBuilding = buildOn;
+        towerGhost.gameObject.SetActive(buildOn);
+        GameManager.Instance.SetBuildMode(buildOn);
+
+        if (buildOn)
+            UpdateTowerGhost();
+    }
+
+    /// <summary>
+    /// Update the tower ghost to represent whether the player can build a tower
+    /// </summary>
+    private void UpdateTowerGhost()
+    {
+        if (ZBucks >= TOWER_PRICE)
+        {
+            towerGhost.color = green;
+            towerRadiusMatInst.SetColor("_Color", green);
+        }
+        else
+        {
+            towerGhost.color = red;
+            towerRadiusMatInst.SetColor("_Color", red);
+        }
+    }
+
     /// <summary>
     /// Check the player's relationship to the bounds of the background and lock the player within it
     /// </summary>
@@ -267,6 +312,27 @@ public class Player : Targetable
         transform.position = newTransform;
     }
 
+    /// <summary>
+    /// Add an amount of zbucks to the player
+    /// </summary>
+    /// <param name="amount">Amount to add</param>
+    public void AddZBucks(ushort amount)
+    {
+        ZBucks += amount;
+
+        UpdateZBucksDisplay();
+
+        if (isBuilding)
+            UpdateTowerGhost();
+    }
+
+    /// <summary>
+    /// Update the zBucks display
+    /// </summary>
+    public void UpdateZBucksDisplay()
+    {
+        zBucksCounter.text = ZBucks.ToString();
+    }
 #if UNITY_EDITOR
     private void OnDrawGizmos()
     {
