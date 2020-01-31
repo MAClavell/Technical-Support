@@ -112,6 +112,15 @@ public class Robot : Targetable
                     case RobotAttackState.Charging:
                         attackTimer += Time.deltaTime;
 
+                        //Find a new target because this one died
+                        if (Target == null)
+                        {
+                            //If still  null, assign to player
+                            if ((Target = FindTarget()) == null)
+                                Target = GameManager.Instance.player;
+                            agent.destination = Target.transform.position;
+                        }
+
                         //Rotate towards target
                         Vector3 direction = (Target.transform.position - transform.position).normalized;
                         Quaternion lookRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
@@ -181,7 +190,7 @@ public class Robot : Targetable
         Collider closest = null;
         float shortestDist = float.MaxValue;
         float sqrDist = 0;
-        Debug.Log("towers found: " + result);
+
         for(int i = 0; i < result; i++)
         {
             sqrDist = Vector3.SqrMagnitude(transform.position - overlapSphereCols[i].transform.position);

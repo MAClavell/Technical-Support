@@ -11,11 +11,12 @@ public class Tower : Targetable
     }
 
     public TowerState currentState = TowerState.Alive;
+    public HealthBar healthBar;
 
     private const int SEARCH_RADIUS = 25;
     private const int MAX_HEALTH = 5;
 
-    private int health = MAX_HEALTH;
+    private int health;
     public Targetable Target { get; set; }
     Collider[] overlapSphereCols;
     public float newTargetTimer;
@@ -25,15 +26,24 @@ public class Tower : Targetable
     [SerializeField]
     private float timeSinceLastShot;
     private const float SHOOT_LIMIT = 1.5f;
+    private GameObject spriteObj;
     private GameObject shootSprite;
 
     //Initialize vars
     private void Awake()
     {
+        
+        float zRotation = transform.localRotation.eulerAngles.y;
+        Debug.Log("zRot: " + zRotation);
+        transform.Rotate(new Vector3(0.0f, 0.0f, zRotation));
+        spriteObj = transform.Find("Sprite").gameObject;
+        spriteObj.transform.Rotate(new Vector3(0.0f, 0.0f, -zRotation));
         IsMoveable = false;
         newTargetTimer = 0.0f;
         timeSinceLastShot = 0.0f;
         overlapSphereCols = new Collider[RobotManager.MAX_ROBOTS];
+        healthBar.Init();
+        SetHealth(MAX_HEALTH);
     }
 
     // Start is called before the first frame update
@@ -89,7 +99,7 @@ public class Tower : Targetable
                 break;
             case TowerState.Dying:
                 GameManager.Instance.RemoveTower(this);
-                Destroy(this);
+                Destroy(gameObject);
                 break;
             default:
                 Debug.LogError("Reached unknown TowerState");
@@ -103,13 +113,24 @@ public class Tower : Targetable
     /// <param name="damageAmount">The amount of damage to apply</param>
     public void TakeDamage(ushort damageAmount)
     {
-        health -= damageAmount;
+        SetHealth(health - damageAmount);
+    }
+
+    /// <summary>
+    /// Update the tower's health value and update its health display
+    /// </summary>
+    /// <param name="value">The new health value</param>
+    public void SetHealth(int value)
+    {
+        health = value;
+
+        healthBar.UpdateDisplay(health, MAX_HEALTH);
 
         if (health < 1)
         {
+            health = 0;
             currentState = TowerState.Dying;
         }
-        Debug.Log("Tower Health: " + health);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -144,9 +165,8 @@ public class Tower : Targetable
 
     public void Aim()
     {
-        transform.LookAt(new Vector3(Target.transform.position.x, transform.position.y, Target.transform.position.z));
-        transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
-        
+        spriteObj.transform.LookAt(new Vector3(Target.transform.position.x, transform.position.y, Target.transform.position.z));
+        spriteObj.transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
     }
 
     public void Shoot()
@@ -166,8 +186,4 @@ public class Tower : Targetable
         shootSprite.SetActive(true);
 
     }
-
-
-
-
 }

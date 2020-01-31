@@ -100,6 +100,15 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
+    /// Set the game state to a new state.
+    /// </summary>
+    /// <param name="newState"></param>
+    public void SetGamestate(GameState newState)
+    {
+        CurrentState = newState;
+    }
+
+    /// <summary>
     /// Spawns a tower into the world
     /// </summary>
     /// <param name="position">Position to spawn at</param>

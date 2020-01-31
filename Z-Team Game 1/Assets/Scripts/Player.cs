@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class Player : Targetable
@@ -19,6 +20,8 @@ public class Player : Targetable
 
     public uint ZBucks { get; private set; }
     public PlayerState currentState = PlayerState.Dead;
+    public PlayerHealthBar healthBar;
+    public TextMeshProUGUI zBucksCounter;
 
     private GameObject placeObj;
     private BoxCollider boxCollider;
@@ -90,6 +93,7 @@ public class Player : Targetable
             case PlayerState.Dying:
                 gameObject.SetActive(false);
                 currentState = PlayerState.Dead;
+                GameManager.Instance.SetGamestate(GameState.Ended);
                 break;
 
             case PlayerState.Dead:
@@ -110,7 +114,7 @@ public class Player : Targetable
 
         currentState = PlayerState.Alive;
 
-        health = MAX_HEALTH;
+        SetHealth(MAX_HEALTH);
 
         transform.position = Vector3.zero;
         transform.rotation = Quaternion.Euler(0, Mathf.Atan2(moveDirection.x, moveDirection.z) * Mathf.Rad2Deg + 180.0f, 0);
@@ -126,10 +130,24 @@ public class Player : Targetable
     /// <param name="damageAmount">The amount of damage to apply</param>
     public void TakeDamage(ushort damageAmount)
     {
-        health -= damageAmount;
+        int newHealth = health - damageAmount;
+
+        SetHealth(newHealth);
+    }
+
+    /// <summary>
+    /// Update the players health value and update the health display
+    /// </summary>
+    /// <param name="value">The new health value</param>
+    public void SetHealth(int value)
+    {
+        health = value;
+
+        healthBar.UpdateDisplay(health, MAX_HEALTH);
 
         if (health < 1)
         {
+            health = 0;
             currentState = PlayerState.Dying;
         }
     }
@@ -141,8 +159,17 @@ public class Player : Targetable
     public void AddZBucks(ushort amount)
     {
         ZBucks += amount;
+        UpdateZBucksDisplay();
     }
-    
+
+    /// <summary>
+    /// Update the zBucks display
+    /// </summary>
+    public void UpdateZBucksDisplay()
+    {
+        zBucksCounter.text = ZBucks.ToString();
+    }
+
     /// <summary>
     /// Move the character
     /// </summary>
@@ -158,6 +185,7 @@ public class Player : Targetable
     {
         if (other.tag == "RobotHitbox")
         {
+            Debug.Log("Player hit");
             TakeDamage(GameManager.ROBOT_ATTACK_DAMAGE);
         }
     }
