@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum GameState { Starting, Playing, Paused, Ended }
 
@@ -88,10 +89,7 @@ public class GameManager : Singleton<GameManager>
                 break;
 
             case GameState.Ended:
-                if (Input.GetKeyDown(KeyCode.R))
-                {
-                    NewGame();
-                }
+                SceneManager.LoadScene("Menu");
                 break;
 
             default:
