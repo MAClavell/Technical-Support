@@ -15,8 +15,14 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] GameObject robotPrefab;
     [SerializeField] GameObject towerPrefab;
     [SerializeField] GameObject zbuckPrefab;
+    [SerializeField] float boundsX;
+    [SerializeField] float boundsY;
 
     public Player player { get; private set; }
+
+    public float BoundsX { get { return boundsX; } }
+    public float BoundsY { get { return boundsY; } }
+
 
     /// <summary>
     /// The current state of the game
@@ -32,6 +38,7 @@ public class GameManager : Singleton<GameManager>
         towers = new List<Tower>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
         player = GameObject.FindObjectOfType<Player>();
+        player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius;
     }
 
     // Start is called before the first frame update
@@ -164,6 +171,9 @@ public class GameManager : Singleton<GameManager>
     [ExecuteInEditMode]
     public void OnDrawGizmos()
     {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(new Vector3(0,0,0), new Vector3(boundsX*2, 1, boundsY*2));
+
         Gizmos.color = Color.white;
         foreach (var rsz in robotSpawnZones)
             Gizmos.DrawWireCube(new Vector3(rsz.position.x, CONSTANT_Y_POS, rsz.position.y), new Vector3(rsz.size.x * 2, 0, rsz.size.y * 2));

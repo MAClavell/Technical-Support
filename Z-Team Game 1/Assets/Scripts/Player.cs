@@ -23,6 +23,7 @@ public class Player : Targetable
     private const ushort TOWER_UPGRADE_PRICE = 2;
 
     public uint ZBucks { get; private set; }
+    public float TowerSize { get; set; }
     public PlayerState currentState = PlayerState.Dead;
     public PlayerHealthBar healthBar;
     public TextMeshProUGUI zBucksCounter;
@@ -31,6 +32,7 @@ public class Player : Targetable
     private BoxCollider boxCollider;
     private SpriteRenderer towerGhost;
     private Material towerRadiusMatInst;
+    private Collider[] towerResults;
 
     private Vector3 moveDirection = Vector3.zero;
 
@@ -41,6 +43,7 @@ public class Player : Targetable
 
     private int health = 0;
     bool isBuilding;
+    private bool canPlace;
 
     private void Awake()
     {
@@ -50,18 +53,15 @@ public class Player : Targetable
         towerGhost = transform.Find("TowerGhost").GetComponent<SpriteRenderer>();
         towerGhost.transform.GetChild(0).localScale = new Vector3(Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT);
         towerRadiusMatInst = towerGhost.GetComponentInChildren<MeshRenderer>().material;
+        towerResults = new Collider[10];
+        canPlace = true;
 
-        float spriteWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x;
+        float spriteHalfWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x / 2;
 
-        Transform groundTransform = GameObject.Find("GameManager/Ground").transform;
-        MeshRenderer groundRenderer = groundTransform.GetComponent<MeshRenderer>();
-
-        float spriteHalfWidth = spriteWidth / 2;
-
-        leftBound = groundTransform.position.x - groundRenderer.bounds.extents.x + spriteHalfWidth;
-        rightBound = groundTransform.position.x + groundRenderer.bounds.extents.x - spriteHalfWidth;
-        bottomBound = groundTransform.position.z - groundRenderer.bounds.extents.z + spriteHalfWidth;
-        topBound = groundTransform.position.z + groundRenderer.bounds.extents.z - spriteHalfWidth;
+        leftBound = -GameManager.Instance.BoundsX + spriteHalfWidth;
+        rightBound = GameManager.Instance.BoundsX - spriteHalfWidth;
+        bottomBound = -GameManager.Instance.BoundsY + spriteHalfWidth;
+        topBound = GameManager.Instance.BoundsY - spriteHalfWidth;
     }
 
     /// <summary>
@@ -95,6 +95,12 @@ public class Player : Targetable
                 moveDirection.z = Input.GetAxisRaw("Vertical");
                 moveDirection.Normalize();
 
+                //Update tower ghost
+                if(isBuilding)
+                {
+                    UpdateTowerGhost();
+                }
+
                 //Placing towers
 		        if(Input.GetKeyDown(KeyCode.Space))
 		        {
@@ -102,7 +108,7 @@ public class Player : Targetable
 		            if(!isBuilding)
 		                SetBuildMode(true);
 		            //Place the tower
-		            else if(ZBucks >= TOWER_PRICE)
+		            else if (canPlace)
 		            {
                         RemoveZBucks(TOWER_PRICE);
 		                GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
@@ -260,15 +266,30 @@ public class Player : Targetable
     /// </summary>
     private void UpdateTowerGhost()
     {
-        if (ZBucks >= TOWER_PRICE)
+        //Find a tower
+        bool towerFound = false;
+        Physics.OverlapSphereNonAlloc(towerGhost.transform.position, TowerSize, towerResults, LayerMask.NameToLayer("Tower"));
+        foreach (var t in towerResults)
         {
-            towerGhost.color = green;
-            towerRadiusMatInst.SetColor("_Color", green);
+            if (t != null)
+            {
+                towerFound = true;
+                break;
+            }
+        }
+
+        //Update ghost
+        if (towerFound || ZBucks < TOWER_PRICE)
+        {
+            canPlace = false;
+            towerGhost.color = red;
+            towerRadiusMatInst.SetColor("_Color", red);
         }
         else
         {
-            towerGhost.color = red;
-            towerRadiusMatInst.SetColor("_Color", red);
+            canPlace = true;
+            towerGhost.color = green;
+            towerRadiusMatInst.SetColor("_Color", green);
         }
     }
 
