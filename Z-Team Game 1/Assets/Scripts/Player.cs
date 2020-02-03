@@ -16,7 +16,7 @@ public class Player : Targetable
     private const float ROTATION_SPEED = 10.0f;
     private const int MAX_HEALTH = 10;
     public const short ZBUCK_COLLECTION_RADIUS = 50;
-    private const ushort TOWER_PRICE = 10;
+    private const ushort TOWER_PRICE = 1;
 
     private readonly Color green = new Color(125f/255f, 1f, 100f/255f, 110f/255f);
     private readonly Color red = new Color(1, 100f/255f, 115f/255f, 110f/255f);
@@ -54,7 +54,6 @@ public class Player : Targetable
         towerGhost.transform.GetChild(0).localScale = new Vector3(Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT);
         towerRadiusMatInst = towerGhost.GetComponentInChildren<MeshRenderer>().material;
         towerResults = new Collider[10];
-        canPlace = true;
 
         float spriteHalfWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x / 2;
 
@@ -80,6 +79,7 @@ public class Player : Targetable
 
         towerGhost.gameObject.SetActive(false);
 
+        canPlace = true;
         ZBucks = TOWER_PRICE;
     }
 
@@ -97,9 +97,7 @@ public class Player : Targetable
 
                 //Update tower ghost
                 if(isBuilding)
-                {
                     UpdateTowerGhost();
-                }
 
                 //Placing towers
 		        if(Input.GetKeyDown(KeyCode.Space))
@@ -257,7 +255,7 @@ public class Player : Targetable
         towerGhost.gameObject.SetActive(buildOn);
         GameManager.Instance.SetBuildMode(buildOn);
 
-        if (buildOn)
+        if (isBuilding)
             UpdateTowerGhost();
     }
 
@@ -267,19 +265,12 @@ public class Player : Targetable
     private void UpdateTowerGhost()
     {
         //Find a tower
-        bool towerFound = false;
-        Physics.OverlapSphereNonAlloc(towerGhost.transform.position, TowerSize, towerResults, LayerMask.NameToLayer("Tower"));
-        foreach (var t in towerResults)
-        {
-            if (t != null)
-            {
-                towerFound = true;
-                break;
-            }
-        }
+        var numTowers = Physics.OverlapSphereNonAlloc(towerGhost.transform.position, 
+            TowerSize, towerResults, 
+            LayerMask.GetMask("Tower"));
 
         //Update ghost
-        if (towerFound || ZBucks < TOWER_PRICE)
+        if (numTowers > 0 || ZBucks < TOWER_PRICE)
         {
             canPlace = false;
             towerGhost.color = red;
