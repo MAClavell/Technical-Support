@@ -9,7 +9,6 @@ class RobotManager
 	//Spawning
 	private Robot[] robots;
 	private RobotSpawnZone[] spawnZones;
-	private GameObject robotPrefab;
 	private ushort currIndex;
 
 	//Robot spawning
@@ -35,8 +34,6 @@ class RobotManager
 	/// <param name="robotPrefab">The basic robot prefab to spawn</param>
 	public RobotManager(GameObject robotPrefab, RobotSpawnZone[] spawnZones)
 	{
-		this.robotPrefab = robotPrefab;
-
 		//Setup event
 		decrementRobotEvent += (index) =>
 		{

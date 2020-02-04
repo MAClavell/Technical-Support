@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class ZBuck : MonoBehaviour
 {
-    private enum ZBuckState { Entering, Standing, Exiting }
+    private enum ZBuckState { Entering, Standing, Exiting, Dead }
     private const float ENTER_TIME = 0.5f;
     private const float EXIT_TIME = 0.5f;
 
@@ -15,16 +15,29 @@ public class ZBuck : MonoBehaviour
     private ushort value;
 
     /// <summary>
+    /// Object pooling index. DO NOT MODIFY
+    /// </summary>
+    public int Index { get; set; }
+
+    private void Start()
+    {
+        player = GameManager.Instance.player;
+        gameObject.SetActive(false);
+    }
+
+    /// <summary>
     /// Initialize the zbuck
     /// </summary>
     /// <param name="enterTarget"></param>
-    public void Init(Vector3 enterTarget, ushort value)
+    public void Init(Vector3 enterPosition, Vector3 enterTarget, ushort value, int index)
     {
+        transform.position = enterPosition;
+        Index = index;
         this.enterTarget = enterTarget;
         timer = 0;
         state = ZBuckState.Entering;
         this.value = value;
-        player = GameManager.Instance.player;
+        gameObject.SetActive(true);
     }
 
     // Update is called once per frame
@@ -58,8 +71,13 @@ public class ZBuck : MonoBehaviour
                 if (timer > 1)
                 {
                     player.AddZBucks(value);
-                    Destroy(gameObject);
+                    GameManager.Instance.RemoveZBuck(Index);
+                    state = ZBuckState.Dead;
+                    gameObject.SetActive(false);
                 }
+                break;
+
+            case ZBuckState.Dead:
                 break;
 
             default:

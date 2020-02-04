@@ -33,7 +33,6 @@ public class GameManager : Singleton<GameManager>
     public float BoundsX { get { return boundsX; } }
     public float BoundsY { get { return boundsY; } }
 
-
     /// <summary>
     /// The current state of the game
     /// </summary>
@@ -42,6 +41,12 @@ public class GameManager : Singleton<GameManager>
     private List<Tower> towers;
     private RobotManager robotManager;
 
+    //ZBuck object pooling
+    private const int ZBUCKET_SIZE = 250;
+    private List<ZBuck[]> zBuckets;
+    private int currIndex;
+    private int activeBucks;
+
     //Initialize vars
     private void Awake()
     {
@@ -49,12 +54,27 @@ public class GameManager : Singleton<GameManager>
         robotManager = new RobotManager(robotPrefab, robotSpawnZones);
         player = GameObject.FindObjectOfType<Player>();
         player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius;
+        zBuckets = new List<ZBuck[]>();
     }
 
     // Start is called before the first frame update
     void Start()
     {
+        //Initialize object pools
         NewGame();
+    }
+
+    /// <summary>
+    /// Create an object pooling bucket for a set amount of zbucks
+    /// </summary>
+    private void CreateZBucket()
+    {
+        var zBucket = new ZBuck[ZBUCKET_SIZE];
+        for(int i = 0; i < ZBUCKET_SIZE; i++)
+        {
+            zBucket[i] = Instantiate(zbuckPrefab).GetComponent<ZBuck>();
+        }
+        zBuckets.Add(zBucket);
     }
 
     /// <summary>
@@ -70,6 +90,15 @@ public class GameManager : Singleton<GameManager>
         foreach (var t in towers)
            Destroy(t.gameObject);
         towers.Clear();
+
+        //Remove any zbucks and create new ones
+        foreach (var b in zBuckets)
+            foreach (var zb in b)
+                Destroy(zb.gameObject);
+        zBuckets.Clear();
+        currIndex = 0;
+        activeBucks = 0;
+        CreateZBucket();
     }
 
     /// <summary>
@@ -97,7 +126,7 @@ public class GameManager : Singleton<GameManager>
                 if (Input.GetKeyDown(KeyCode.R))
                     robotManager.Spawn();
 
-                if (Input.GetKeyDown(KeyCode.T))
+                if (Input.GetKey(KeyCode.T))
                     SpawnZBucks(2, Vector3.zero, 1);
 #endif
                 break;
@@ -154,14 +183,40 @@ public class GameManager : Singleton<GameManager>
     {
         for(ushort i = 0; i < amount; i++)
         {
+            //Create more buckets if need be
+            if (activeBucks >= zBuckets.Count * ZBUCKET_SIZE)
+                CreateZBucket();
+
             //TODO: stop coins from going offscreen
             float angle = Random.Range(0, 360);
             Quaternion rotation = Quaternion.Euler(90, 0, angle);
             Vector3 target = position + (rotation * new Vector3(1, CONSTANT_Y_POS, 0));
             
             //Initialize the zbuck
-            Instantiate(zbuckPrefab, position, rotation).GetComponent<ZBuck>().Init(target, valuePerBuck);
+            int bucketIndex = Mathf.FloorToInt((float)currIndex / ZBUCKET_SIZE);
+            int index = currIndex % ZBUCKET_SIZE;
+            zBuckets[bucketIndex][index].Init(position, target, valuePerBuck, currIndex);
+            currIndex++;;
+            activeBucks++;
         }
+    }
+
+    public void RemoveZBuck(int index)
+    {
+        activeBucks--;
+
+        //Calculate indices
+        int bucketIndex = Mathf.FloorToInt((float)index / ZBUCKET_SIZE);
+        int arrayIndex = index % ZBUCKET_SIZE;
+        int swapBucketIndex = Mathf.FloorToInt((float)(currIndex - 1) / ZBUCKET_SIZE);
+        int swapArrayIndex = (currIndex - 1) % ZBUCKET_SIZE;
+
+        //Swap
+        ZBuck temp = zBuckets[swapBucketIndex][swapArrayIndex];
+        zBuckets[swapBucketIndex][swapArrayIndex] = zBuckets[bucketIndex][arrayIndex];
+        zBuckets[bucketIndex][arrayIndex] = temp;
+        zBuckets[bucketIndex][arrayIndex].Index = index;
+        currIndex--;
     }
 
     /// <summary>
