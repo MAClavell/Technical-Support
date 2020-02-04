@@ -166,6 +166,8 @@ MonoBehaviour:
     type: 3}
   zbuckPrefab: {fileID: 7957871202850625061, guid: deaa1e6054a957b47886644d67b39fe4,
     type: 3}
+  upgradedTowerSprite: {fileID: 21300000, guid: c51f39f203cfd254aa0cb2c021c9a4de,
+    type: 3}
   boundsX: 76.8
   boundsY: 48.3
 --- !u!4 &16036572

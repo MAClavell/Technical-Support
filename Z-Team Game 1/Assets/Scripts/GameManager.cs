@@ -8,17 +8,27 @@ public enum GameState { Starting, Playing, Paused, Ended }
 public class GameManager : Singleton<GameManager>
 {
 	public const float CONSTANT_Y_POS = -0.92f;
-	// Put here temporarilly for convenience
     public const ushort ROBOT_ATTACK_DAMAGE = 1;
+
+    //Colors
+    private const float TRANSPARENT_ALPHA = 110f / 255f;
+    public static readonly Color WHITE = Color.white;
+    public static readonly Color GREEN = new Color(125f / 255f, 1f, 100f / 255f, 1);
+    public static readonly Color RED = new Color(1, 100f / 255f, 115f / 255f, 1);
+    public static readonly Color GREEN_TRANSPARENT = new Color(GREEN.r, GREEN.g, GREEN.b, TRANSPARENT_ALPHA);
+    public static readonly Color RED_TRANSPARENT = new Color(RED.r, RED.g, RED.b, TRANSPARENT_ALPHA);
+    public static readonly Color GREY_TRANSPARENT = new Color(180f / 255f, 180f / 255f, 180f / 255f, TRANSPARENT_ALPHA);
 
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
     [SerializeField] GameObject robotPrefab;
     [SerializeField] GameObject towerPrefab;
     [SerializeField] GameObject zbuckPrefab;
+    [SerializeField] Sprite upgradedTowerSprite;
     [SerializeField] float boundsX;
     [SerializeField] float boundsY;
 
     public Player player { get; private set; }
+    public Sprite UpgradedTowerSprite { get => upgradedTowerSprite; }
 
     public float BoundsX { get { return boundsX; } }
     public float BoundsY { get { return boundsY; } }
@@ -121,7 +131,9 @@ public class GameManager : Singleton<GameManager>
     /// <param name="rotation">Rotation to spawn at</param>
     public void SpawnTower(Vector3 position, Quaternion rotation)
     {
-        towers.Add(Instantiate(towerPrefab, position, rotation).GetComponent<Tower>());
+        var tower = Instantiate(towerPrefab, position, Quaternion.Euler(90,0,0)).GetComponent<Tower>();
+        tower.InitRotation(rotation);
+        towers.Add(tower);
     }
 
     /// <summary>

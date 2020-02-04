@@ -12,27 +12,24 @@ public class Player : Targetable
         Dead
     }
 
+    public const short ZBUCK_COLLECTION_RADIUS = 50;
     private const float MOVE_SPEED = 30.0f;
     private const float ROTATION_SPEED = 10.0f;
     private const int MAX_HEALTH = 10;
-    public const short ZBUCK_COLLECTION_RADIUS = 50;
+    private static readonly ushort[] TOWER_UPGRADE_PRICES = { 1, 1, 1 };
     private const ushort TOWER_PRICE = 1;
 
-    private readonly Color green = new Color(125f/255f, 1f, 100f/255f, 110f/255f);
-    private readonly Color red = new Color(1, 100f/255f, 115f/255f, 110f/255f);
-    private const ushort TOWER_UPGRADE_PRICE = 2;
-
-    public uint ZBucks { get; private set; }
     public float TowerSize { get; set; }
+
     public PlayerState currentState = PlayerState.Dead;
     public PlayerHealthBar healthBar;
     public TextMeshProUGUI zBucksCounter;
 
-    private GameObject placeObj;
-    private BoxCollider boxCollider;
+    private Tower lastHighlightedTower;
     private SpriteRenderer towerGhost;
     private Material towerRadiusMatInst;
     private Collider[] towerResults;
+    private RaycastHit towerHit;
 
     private Vector3 moveDirection = Vector3.zero;
 
@@ -41,6 +38,7 @@ public class Player : Targetable
     private float rightBound;
     private float bottomBound;
 
+    private uint zBucks;
     private int health = 0;
     bool isBuilding;
     private bool canPlace;
@@ -49,7 +47,6 @@ public class Player : Targetable
     {
         IsMoveable = true;
         isBuilding = false;
-        boxCollider = GetComponent<BoxCollider>();
         towerGhost = transform.Find("TowerGhost").GetComponent<SpriteRenderer>();
         towerGhost.transform.GetChild(0).localScale = new Vector3(Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT, Tower.SEARCH_RADIUS_SQRT);
         towerRadiusMatInst = towerGhost.GetComponentInChildren<MeshRenderer>().material;
@@ -80,7 +77,8 @@ public class Player : Targetable
         towerGhost.gameObject.SetActive(false);
 
         canPlace = true;
-        ZBucks = TOWER_PRICE;
+        zBucks = TOWER_PRICE;
+        lastHighlightedTower = null;
     }
 
     // Update is called once per frame
@@ -97,10 +95,48 @@ public class Player : Targetable
 
                 //Update tower ghost
                 if(isBuilding)
+                {
+                    //Update our tower's ghost on whether it can be placed or not
                     UpdateTowerGhost();
 
+                    //Check if we are hovering over a tower
+                    Tower t = null;
+                    Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                    if (Physics.Raycast(ray, out towerHit, Mathf.Infinity, LayerMask.GetMask("Tower")))
+                    {
+                        t = towerHit.collider.GetComponent<Tower>();
+                        var level = t.Level;
+                        if (level < Tower.MAX_LEVEL) //only upgrade towers that are lower than the max level
+                        {
+                            if (zBucks >= TOWER_UPGRADE_PRICES[level])
+                            {
+                                //Update that tower's visuals
+                                t.SetBuildColor(TowerBuildColor.Green);
+
+                                //When the player clicks to upgrade
+                                if (Input.GetMouseButtonDown(0))
+                                {
+                                    RemoveZBucks(TOWER_UPGRADE_PRICES[level]);
+                                    t.Upgrade();
+                                    SetBuildMode(false);
+                                }
+                            }
+                            else
+                            {
+                                //Update that tower's visuals
+                                t.SetBuildColor(TowerBuildColor.Red);
+                            }
+                        }
+                    }
+
+                    //Reset tower if need-be
+                    if (t != lastHighlightedTower)
+                        lastHighlightedTower?.SetBuildColor(TowerBuildColor.Default);
+                    lastHighlightedTower = t;
+                }
+
                 //Placing towers
-		        if(Input.GetKeyDown(KeyCode.Space))
+                if (Input.GetKeyDown(KeyCode.Space))
 		        {
 		            //Show shadow of tower before placing
 		            if(!isBuilding)
@@ -170,21 +206,6 @@ public class Player : Targetable
         {
             Move();
         }
-        // Commented all this out because all of this logic is in update where it is also hooked up to input
-        ////Show shadow of tower before placing
-        //if(!isBuilding) {
-        //    SetBuildMode(true);
-        //}
-        ////Place the tower
-        //else if(ZBucks >= TOWER_PRICE)
-        //{
-        //    ZBucks -= TOWER_PRICE;
-        //    GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
-        //    SetBuildMode(false);
-        //}
-        ////Cancel placement
-        //else if(isBuilding && Input.GetKeyDown(KeyCode.F))
-        //    SetBuildMode(false);
     }
 
     private void OnTriggerEnter(Collider other)
@@ -270,17 +291,17 @@ public class Player : Targetable
             LayerMask.GetMask("Tower"));
 
         //Update ghost
-        if (numTowers > 0 || ZBucks < TOWER_PRICE)
+        if (numTowers > 0 || zBucks < TOWER_PRICE)
         {
             canPlace = false;
-            towerGhost.color = red;
-            towerRadiusMatInst.SetColor("_Color", red);
+            towerGhost.color = GameManager.RED_TRANSPARENT;
+            towerRadiusMatInst.SetColor("_Color", GameManager.RED_TRANSPARENT);
         }
         else
         {
             canPlace = true;
-            towerGhost.color = green;
-            towerRadiusMatInst.SetColor("_Color", green);
+            towerGhost.color = GameManager.GREEN_TRANSPARENT;
+            towerRadiusMatInst.SetColor("_Color", GameManager.GREEN_TRANSPARENT);
         }
     }
 
@@ -317,7 +338,7 @@ public class Player : Targetable
     /// <param name="amount">Amount to add</param>
     public void RemoveZBucks(ushort amount)
     {
-        ZBucks -= amount;
+        zBucks -= amount;
 
         UpdateZBucksDisplay();
     }
@@ -328,7 +349,7 @@ public class Player : Targetable
     /// <param name="amount">Amount to add</param>
     public void AddZBucks(ushort amount)
     {
-        ZBucks += amount;
+        zBucks += amount;
 
         UpdateZBucksDisplay();
 
@@ -341,7 +362,7 @@ public class Player : Targetable
     /// </summary>
     public void UpdateZBucksDisplay()
     {
-        zBucksCounter.text = ZBucks.ToString();
+        zBucksCounter.text = zBucks.ToString();
     }
 #if UNITY_EDITOR
     private void OnDrawGizmos()

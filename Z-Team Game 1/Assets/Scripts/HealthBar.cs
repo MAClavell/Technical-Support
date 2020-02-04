@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class HealthBar : MonoBehaviour
 {
-    public float ratio;
     public bool hide = false;
 
     private GameObject fillObject;
 
+    private float ratio;
     private float maxWidth;
     private float height;
 
@@ -36,7 +36,7 @@ public class HealthBar : MonoBehaviour
         }
     }
 
-    public void UpdateDisplay(int current, int max)
+    public void UpdateDisplay(int current, int max, Color? colorOverride = null)
     {
         ratio = (float)current / (float)max;
 
@@ -45,7 +45,10 @@ public class HealthBar : MonoBehaviour
 
         fillObject.transform.localScale = new Vector3(maxWidth * ratio, height, 1);
 
-        UpdateColor();
+        if (colorOverride == null)
+            UpdateColor();
+        else
+            fillObject.GetComponent<SpriteRenderer>().color = colorOverride.Value;
 
         if (hide && ratio == 1)
         {

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum TowerBuildColor { Green, Red, Default};
+
 public class Tower : Targetable
 {
     public enum TowerState
@@ -10,46 +12,53 @@ public class Tower : Targetable
         Dying
     }
 
-    public TowerState currentState = TowerState.Alive;
-    public HealthBar healthBar;
-
+    //Constants
+    public static readonly float SEARCH_RADIUS_SQRT = Mathf.Sqrt(SEARCH_RADIUS);
+    public const short MAX_LEVEL = 3;
+    private static readonly Color BLUE = new Color(54f / 255f, 89f / 255f, 253f / 255f, 1f);
     private const int SEARCH_RADIUS = 25;
     private const int MAX_HEALTH = 5;
 
-    private int health;
-    private const float SHOOT_LIMIT = 1.5f;
-    public static readonly float SEARCH_RADIUS_SQRT = Mathf.Sqrt(SEARCH_RADIUS);
-
-    [SerializeField]
-    private float timeSinceLastShot;
-
     public Targetable Target { get; set; }
-    public float newTargetTimer;
-    public bool trackingTarget;
-    public bool notTracking;
-   
+    public short Level { get; private set; }
+
+    [SerializeField] private HealthBar healthBar;
+    [SerializeField] private HealthBar expBar;
+
     Collider[] overlapSphereCols;
-    private GameObject spriteObj;
+    private SpriteRenderer spriteObj;
     private GameObject shootSprite;
     private GameObject radiusDisplay;
- 	private short DAMAGE_AMOUNT = 1;
+    private Material towerRadiusMatInst;
+    private TowerState currentState;
+    private float timeSinceLastShot;
+    
+    //Tower traits
+    private int health;
+    private float shootLimit = 1.5f;
+ 	private short damageAmnt = 1;
+
 
     //Initialize vars
     private void Awake()
     {
-        float zRotation = transform.localRotation.eulerAngles.y;
-        transform.Rotate(new Vector3(0.0f, 0.0f, zRotation));
-        spriteObj = transform.Find("Sprite").gameObject;
-        spriteObj.transform.Rotate(new Vector3(0.0f, 0.0f, -zRotation));
+        //Initialize values
         IsMoveable = false;
-        newTargetTimer = 0.0f;
         timeSinceLastShot = 0.0f;
-        overlapSphereCols = new Collider[RobotManager.MAX_ROBOTS];
-        healthBar.Init();
-        SetHealth(MAX_HEALTH);
+        currentState = TowerState.Alive;
+        overlapSphereCols = new Collider[30];
+        Target = null;
+        Level = 0;
 
+        //Find children
+        spriteObj = transform.Find("Sprite").GetComponent<SpriteRenderer>();
         shootSprite = transform.Find("Sprite/bigBullet").gameObject;
         radiusDisplay = transform.Find("RadiusDisplay").gameObject;
+        towerRadiusMatInst = radiusDisplay.GetComponent<MeshRenderer>().material;
+
+        healthBar.Init();
+        SetHealth(MAX_HEALTH);
+        expBar.Init();
     }
 
     // Start is called before the first frame update
@@ -62,66 +71,142 @@ public class Tower : Targetable
         radiusDisplay.SetActive(false);
     }
 
+    /// <summary>
+    /// Initialize the sprite rotation
+    /// </summary>
+    /// <param name="rotation">The initial rotation</param>
+    public void InitRotation(Quaternion rotation)
+    {
+        spriteObj.transform.Rotate(new Vector3(0.0f, 0.0f, -rotation.eulerAngles.y));
+    }
+
     // Update is called once per frame
     void Update()
     {
         switch (currentState)
         {
             case TowerState.Alive:
-                //Search for a nearby robot
-                if (newTargetTimer > 10)
+                timeSinceLastShot += Time.deltaTime;
+
+                //Only aim and shoot at valid targets
+                if (IsTargetValid(Target))
+                {
+                    //If a target goes out of range, stop shooting at it
+                    if (Vector3.SqrMagnitude(transform.position - Target.transform.position) > SEARCH_RADIUS * SEARCH_RADIUS)
+                        SetTarget(null);
+                    //Shoot target
+                    else
+                    {
+                        Aim();
+                        if (timeSinceLastShot > shootLimit)
+                        {
+                            Shoot();
+                            timeSinceLastShot = 0.0f;
+                        }
+                    }
+                }
+                //Search for a nearby robot if ours isn't valid anymore
+                else
                 {
                     Targetable newTarget = FindTarget();
-                    if (newTarget != null)
+                    if (IsTargetValid(newTarget))
+                        //Found a target
+                        SetTarget(newTarget);
+                    else
+                        SetTarget(null);
+                }
+
+                if (shootSprite.activeSelf)
+                {
+                    if (timeSinceLastShot > .25f)
                     {
-                        Target = newTarget;
-                        newTargetTimer = 0.0f;
-                        trackingTarget = true;
+                        shootSprite.SetActive(false);
                     }
                 }
-
-                if (Target == null || !Target.gameObject.activeSelf)
-                {
-                    if ((Target = FindTarget()) == null)
-                        trackingTarget = false;
-                }
-                //If a target goes out of range, stop shooting at it
-                else if(Vector3.SqrMagnitude(transform.position - Target.transform.position) > SEARCH_RADIUS * SEARCH_RADIUS)
-                    Target = null;
-                else if (Target.IsMoveable)
-                {
-                    Aim();
-                    if (timeSinceLastShot > SHOOT_LIMIT)
-                    {
-                        Shoot();
-                        timeSinceLastShot = 0.0f;
-                    }
-                }
-
-                if (timeSinceLastShot > .25f)
-                {
-                    shootSprite.SetActive(false);
-                }
-
-                //Update Timer
-                newTargetTimer += Time.deltaTime;
-                timeSinceLastShot += Time.deltaTime;
                 break;
+
             case TowerState.Dying:
                 GameManager.Instance.RemoveTower(this);
                 Destroy(gameObject);
                 break;
+
             default:
-                Debug.LogError("Reached unknown TowerState");
                 break;
         }
+    }
+
+    /// <summary>
+    /// Upgrade this tower up a level
+    /// </summary>
+    public void Upgrade()
+    {
+        Level++;
+        expBar.UpdateDisplay(Level, MAX_LEVEL, BLUE);
+
+        //Upgrade the tower's stats
+        switch (Level)
+        {
+            case 1:
+                shootLimit = 1;
+                break;
+
+            case 2:
+                damageAmnt = 2;
+                break;
+            
+            case 3:
+                damageAmnt = 3;
+                shootLimit = 0.75f;
+                break;
+
+            default:
+                break;
+        }
+
+        if (Level == MAX_LEVEL)
+            spriteObj.sprite = GameManager.Instance.UpgradedTowerSprite;
+    }
+
+    /// <summary>
+    /// Set the color of this tower
+    /// </summary>
+    /// <param name="tColor"></param>
+    public void SetBuildColor(TowerBuildColor tColor)
+    {
+        switch (tColor)
+        {
+            case TowerBuildColor.Green:
+                spriteObj.color = GameManager.GREEN;
+                towerRadiusMatInst.SetColor("_Color", GameManager.GREEN_TRANSPARENT);
+                break;
+            case TowerBuildColor.Red:
+                spriteObj.color = GameManager.RED;
+                towerRadiusMatInst.SetColor("_Color", GameManager.RED_TRANSPARENT);
+                break;
+            case TowerBuildColor.Default:
+                spriteObj.color = GameManager.WHITE;
+                towerRadiusMatInst.SetColor("_Color", GameManager.GREY_TRANSPARENT);
+                break;
+            default:
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Sets the build mode setting (display the radius of the turret)
+    /// </summary>
+    /// <param name="buildOn">Whether build mode is on or not</param>
+    public void SetBuildMode(bool buildOn)
+    {
+        radiusDisplay.SetActive(buildOn);
+        SetBuildColor(TowerBuildColor.Default);
     }
 
     /// <summary>
     /// Have this tower take damage
     /// </summary>
     /// <param name="damageAmount">The amount of damage to apply</param>
-    public void TakeDamage(ushort damageAmount)
+    private void TakeDamage(ushort damageAmount)
     {
         SetHealth(health - damageAmount);
     }
@@ -130,7 +215,7 @@ public class Tower : Targetable
     /// Update the tower's health value and update its health display
     /// </summary>
     /// <param name="value">The new health value</param>
-    public void SetHealth(int value)
+    private void SetHealth(int value)
     {
         health = value;
 
@@ -151,6 +236,16 @@ public class Tower : Targetable
         }
     }
 
+    /// <summary>
+    /// Check if a target is valid to be targeted
+    /// </summary>
+    /// <param name="target">The target to check</param>
+    /// <returns>Whether it is valid or not</returns>
+    private bool IsTargetValid(Targetable target)
+    {
+        return target != null && target.gameObject.activeSelf;
+    }
+
     private Targetable FindTarget()
     {
         //Perform overlap sphere
@@ -162,23 +257,34 @@ public class Tower : Targetable
         float sqrDist = 0;
         for (int i = 0; i < result; i++)
         {
-            sqrDist = Vector3.SqrMagnitude(transform.position - overlapSphereCols[i].transform.position);
-            if (sqrDist < shortestDist)
+            if (overlapSphereCols[i].gameObject.activeSelf)
             {
-                shortestDist = sqrDist;
-                closest = overlapSphereCols[i];
+                sqrDist = Vector3.SqrMagnitude(transform.position - overlapSphereCols[i].transform.position);
+                if (sqrDist < shortestDist)
+                {
+                    shortestDist = sqrDist;
+                    closest = overlapSphereCols[i];
+                }
             }
         }
         return closest?.GetComponent<Targetable>();
     }
 
-    public void Aim()
+    /// <summary>
+    /// Set the target of this tower
+    /// </summary>
+    private void SetTarget(Targetable target)
+    {
+        Target = target;
+    }
+
+    private void Aim()
     {
         spriteObj.transform.LookAt(new Vector3(Target.transform.position.x, transform.position.y, Target.transform.position.z));
         spriteObj.transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
     }
 
-    public void Shoot()
+    private void Shoot()
     {
         //Make sure that the target has not been destroyed by another tower
         if (Target != null && Target.gameObject.activeSelf)
@@ -186,22 +292,15 @@ public class Tower : Targetable
             //Cast the object into a Robot
             Robot currentRobot = (Robot)Target;
             //Give Damage
-            currentRobot.TakeDamage(DAMAGE_AMOUNT);
+            currentRobot.TakeDamage(damageAmnt);
+            if (IsTargetValid(Target))
+                SetTarget(null);
         }
         timeSinceLastShot = 0.0f;
 
         //Display Shot
         shootSprite.SetActive(true);
 
-    }
-
-    /// <summary>
-    /// Sets the build mode setting (display the radius of the turret)
-    /// </summary>
-    /// <param name="buildOn">Whether build mode is on or not</param>
-    public void SetBuildMode(bool buildOn)
-    {
-        radiusDisplay.SetActive(buildOn);
     }
 
 
