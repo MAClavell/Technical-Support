@@ -7,11 +7,13 @@ public class ZBuck : MonoBehaviour
     private enum ZBuckState { Entering, Standing, Exiting, Dead }
     private const float ENTER_TIME = 0.5f;
     private const float EXIT_TIME = 0.5f;
+    private const float MAX_TIME = 10.0f;
 
     Player player;
     private ZBuckState state;
     private Vector3 enterTarget;
     private float timer;
+    private float decayTimer;
     private ushort value;
 
     /// <summary>
@@ -23,6 +25,7 @@ public class ZBuck : MonoBehaviour
     {
         player = GameManager.Instance.player;
         gameObject.SetActive(false);
+        decayTimer = 0;
     }
 
     /// <summary>
@@ -35,6 +38,7 @@ public class ZBuck : MonoBehaviour
         Index = index;
         this.enterTarget = enterTarget;
         timer = 0;
+        decayTimer = 0;
         state = ZBuckState.Entering;
         this.value = value;
         gameObject.SetActive(true);
@@ -83,5 +87,25 @@ public class ZBuck : MonoBehaviour
             default:
                 break;
         }
+
+        if (decayTimer >= MAX_TIME)
+        {
+            GameManager.Instance.RemoveZBuck(Index);
+            state = ZBuckState.Dead;
+            gameObject.SetActive(false);
+
+        }
+
+
+        //Color col = gameObject.GetComponent<Renderer>().material.color;
+        //col.a = 0;
+        
+        //gameObject.GetComponent<Renderer>().material.color = Color.Lerp(gameObject.GetComponent<Renderer>().material.color, col, MAX_TIME*Time.deltaTime);
+
+
+        decayTimer += Time.deltaTime;
+
+
+
     }
 }
