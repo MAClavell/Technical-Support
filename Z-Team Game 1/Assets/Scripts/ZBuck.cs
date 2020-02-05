@@ -41,6 +41,9 @@ public class ZBuck : MonoBehaviour
         decayTimer = 0;
         state = ZBuckState.Entering;
         this.value = value;
+        Color col = gameObject.GetComponent<Renderer>().material.color;
+        col.a = 1.0f;
+        gameObject.GetComponent<Renderer>().material.color = col;
         gameObject.SetActive(true);
     }
 
@@ -97,12 +100,10 @@ public class ZBuck : MonoBehaviour
         }
 
 
-        //Color col = gameObject.GetComponent<Renderer>().material.color;
-        //col.a = 0;
+        Color col = gameObject.GetComponent<Renderer>().material.color;
+        col.a = 0;
         
-        //gameObject.GetComponent<Renderer>().material.color = Color.Lerp(gameObject.GetComponent<Renderer>().material.color, col, MAX_TIME*Time.deltaTime);
-
-
+        gameObject.GetComponent<Renderer>().material.color = Color.Lerp(gameObject.GetComponent<Renderer>().material.color, col, Time.deltaTime/MAX_TIME);
         decayTimer += Time.deltaTime;
 
 
