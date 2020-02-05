@@ -29,6 +29,7 @@ public class GameManager : Singleton<GameManager>
 
     public Player player { get; private set; }
     public Sprite UpgradedTowerSprite { get => upgradedTowerSprite; }
+    public GameObject mainMenu;
 
     public float BoundsX { get { return boundsX; } }
     public float BoundsY { get { return boundsY; } }
@@ -58,8 +59,9 @@ public class GameManager : Singleton<GameManager>
     }
 
     // Start is called before the first frame update
-    void Start()
+    public void Start()
     {
+        robotManager.Start();
         //Initialize object pools
         NewGame();
     }
@@ -135,7 +137,7 @@ public class GameManager : Singleton<GameManager>
                 break;
 
             case GameState.Ended:
-                SceneManager.LoadScene("Menu");
+                mainMenu.SetActive(true);
                 break;
 
             default:

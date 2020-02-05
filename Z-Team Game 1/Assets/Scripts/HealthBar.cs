@@ -71,4 +71,10 @@ public class HealthBar : MonoBehaviour
             fillObject.GetComponent<SpriteRenderer>().color = green;
         }
     }
+
+    //quit game
+    public void QuitGame()
+    {
+        Application.Quit();
+    }
 }
