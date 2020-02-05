@@ -61,7 +61,6 @@ public class GameManager : Singleton<GameManager>
     // Start is called before the first frame update
     public void Start()
     {
-        robotManager.Start();
         //Initialize object pools
         NewGame();
     }
@@ -203,6 +202,10 @@ public class GameManager : Singleton<GameManager>
         }
     }
 
+    /// <summary>
+    /// Remove a ZBuck at a specific index
+    /// </summary>
+    /// <param name="index">The index of the zbuck array to remove</param>
     public void RemoveZBuck(int index)
     {
         activeBucks--;

@@ -52,7 +52,6 @@ class RobotManager
 		this.spawnZones = spawnZones;
 
 		//Instantiate all robots
-		currIndex = 0;
 		robots = new Robot[MAX_ROBOTS];
 		for(int i = 0; i < MAX_ROBOTS; i++)
 		{
@@ -65,6 +64,12 @@ class RobotManager
 	/// </summary>
 	public void Start()
 	{
+		currIndex = 0;
+		foreach(var r in robots)
+		{
+			r.gameObject.SetActive(false);
+		}
+
 		currAmount = 0;
 		toSpawn = 0;
 		maxToSpawnPerFrame = 1;
