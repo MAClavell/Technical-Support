@@ -13,6 +13,21 @@ public class Player : Targetable
     }
 
     public const short ZBUCK_COLLECTION_RADIUS = 50;
+
+    // Audio members, properties and constants
+    private AudioSource audioSource;
+    public AudioSource moveSoundSource;
+    private const float MOVE_VOLUME = 0.1f;
+    public AudioClip hitSound;
+    private const float HIT_PITCH = 0.35f;
+    private const float HIT_VOLUME = 0.3f;
+    public AudioClip deathSound;
+    private const float DEATH_PITCH = 0.8f;
+    private const float DEATH_VOLUME = 0.3f;
+    public AudioClip placeTurretSound;
+    private const float PLACE_TURRET_PITCH = 1.0f;
+    private const float PLACE_TURRET_VOLUME = 0.3f;
+
     private const float MOVE_SPEED = 30.0f;
     private const float ROTATION_SPEED = 10.0f;
     private const int MAX_HEALTH = 10;
@@ -52,6 +67,8 @@ public class Player : Targetable
         towerRadiusMatInst = towerGhost.GetComponentInChildren<MeshRenderer>().material;
         towerResults = new Collider[10];
 
+        audioSource = GetComponent<AudioSource>();
+
         float spriteHalfWidth = transform.Find("Sprite").GetComponent<SpriteRenderer>().size.x / 2;
 
         leftBound = -GameManager.Instance.BoundsX + spriteHalfWidth;
@@ -66,6 +83,8 @@ public class Player : Targetable
     public void Init()
     {
         gameObject.SetActive(true);
+
+        moveSoundSource.volume = 0.05f;
 
         currentState = PlayerState.Alive;
 
@@ -84,6 +103,8 @@ public class Player : Targetable
     // Update is called once per frame
     void Update()
     {
+        if (GameManager.Instance.CurrentState != GameState.Playing) return;
+
         switch (currentState)
         {
             case PlayerState.Alive:
@@ -145,6 +166,11 @@ public class Player : Targetable
 		            else if (canPlace)
 		            {
                         RemoveZBucks(TOWER_PRICE);
+                        if (!GameManager.Instance.muteSFX)
+                        {
+                            audioSource.pitch = PLACE_TURRET_PITCH;
+                            audioSource.PlayOneShot(placeTurretSound, PLACE_TURRET_VOLUME * GameManager.Instance.sfxVolume);
+                        }
 		                GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
 		                SetBuildMode(false);
 		            }
@@ -170,6 +196,68 @@ public class Player : Targetable
     }
 
     /// <summary>
+    /// Move the character
+    /// </summary>
+    private void FixedUpdate()
+    {
+        if (GameManager.Instance.CurrentState != GameState.Playing) return;
+
+        if (currentState == PlayerState.Alive)
+        {
+            Move();
+        }
+    }
+
+    /// <summary>
+    /// Move the player, check for collisions and update sprite
+    /// </summary>
+    private void Move()
+    {
+        if (moveDirection != Vector3.zero)
+        {
+            if (!GameManager.Instance.muteSFX)
+            {
+                if (!moveSoundSource.isPlaying)
+                {
+                    moveSoundSource.Play();
+
+                    LeanTween.value(gameObject, (float vol) =>
+                    {
+                        moveSoundSource.volume = vol * GameManager.Instance.sfxVolume;
+                    }, 
+                    moveSoundSource.volume, 
+                    MOVE_VOLUME, 
+                    0.5f);
+                }
+            }
+            else if (moveSoundSource.isPlaying)
+            {
+                moveSoundSource.Pause();
+            }
+
+            transform.position = transform.position + moveDirection * MOVE_SPEED * Time.fixedDeltaTime;
+
+            LerpSpriteRotation();
+            // RotateSprite();
+
+            CheckBounds();
+        }
+        else if (moveSoundSource.isPlaying)
+        {
+            LeanTween.value(gameObject, (float vol) =>
+            {
+                moveSoundSource.volume = vol * GameManager.Instance.sfxVolume;
+            },
+             moveSoundSource.volume,
+             0.05f,
+             0.3f).setOnComplete(() =>
+             {
+                 moveSoundSource.Pause();
+             });
+        }
+    }
+
+    /// <summary>
     /// Have the player take damange
     /// </summary>
     /// <param name="damageAmount">The amount of damage to apply</param>
@@ -177,6 +265,12 @@ public class Player : Targetable
     {
         int newHealth = health - damageAmount;
 
+        if (!GameManager.Instance.muteSFX)
+        {
+            audioSource.pitch = HIT_PITCH;
+            audioSource.PlayOneShot(hitSound, HIT_VOLUME * GameManager.Instance.sfxVolume);
+        }
+        
         SetHealth(newHealth);
     }
 
@@ -193,18 +287,12 @@ public class Player : Targetable
         if (health < 1)
         {
             health = 0;
+            if (!GameManager.Instance.muteSFX)
+            {
+                audioSource.pitch = DEATH_PITCH;
+                audioSource.PlayOneShot(deathSound, DEATH_VOLUME * GameManager.Instance.sfxVolume);
+            }
             currentState = PlayerState.Dying;
-        }
-    }
-
-    /// <summary>
-    /// Move the character
-    /// </summary>
-    private void FixedUpdate()
-    {
-        if (currentState == PlayerState.Alive)
-        {
-            Move();
         }
     }
 
@@ -212,24 +300,7 @@ public class Player : Targetable
     {
         if (other.tag == "RobotHitbox")
         {
-            Debug.Log("Player hit");
             TakeDamage(GameManager.ROBOT_ATTACK_DAMAGE);
-        }
-    }
-
-    /// <summary>
-    /// Move the player, check for collisions and update sprite
-    /// </summary>
-    private void Move()
-    {
-        if (moveDirection != Vector3.zero)
-        {
-            transform.position = transform.position + moveDirection * MOVE_SPEED * Time.fixedDeltaTime;
-
-            LerpSpriteRotation();
-            // RotateSprite();
-
-            CheckBounds();
         }
     }
 

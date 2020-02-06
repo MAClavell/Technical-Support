@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using System;
+using UnityEngine.UI;
 
 public enum GameState { Starting, Playing, Paused, Ended }
 
@@ -34,6 +35,10 @@ public class GameManager : Singleton<GameManager>
     public Sprite UpgradedTowerSprite { get => upgradedTowerSprite; }
     public GameObject mainMenu;
 
+    // Background music properties
+    public AudioSource audioSource;
+    public AudioClip mainMusic;
+
     public float BoundsX { get { return boundsX; } }
     public float BoundsY { get { return boundsY; } }
 
@@ -41,6 +46,11 @@ public class GameManager : Singleton<GameManager>
     /// The current state of the game
     /// </summary>
     public GameState CurrentState { get; private set; }
+
+    public bool muteSFX { get; private set; } = false;
+    public bool muteMusic { get; private set; } = false;
+    public float sfxVolume { get; private set; } = 1.0f;
+    public float musicVolume { get; private set; } = 1.0f;
 
     private List<Tower> towers;
     private RobotManager robotManager;
@@ -124,6 +134,7 @@ public class GameManager : Singleton<GameManager>
 
             case GameState.Playing:
                 robotManager.Update();
+
                 timerGUI.text = $"<mspace=0.6em>{TimeSpan.FromSeconds(robotManager.TotalTime).ToString("mm'::'ss'.'ff")}</mspace>";
 
 #if UNITY_EDITOR
@@ -147,6 +158,31 @@ public class GameManager : Singleton<GameManager>
                 Debug.LogError("Unknown game state reached. What did you do??");
                 break;
         }
+    }
+
+    /// <summary>
+    /// Sets the MuteMusic bool when the Music toggle is changed
+    /// </summary>
+    public void ToggleMuteMusic(Toggle e)
+    {
+        muteMusic = e.isOn;
+
+        if (!muteMusic && audioSource.isPlaying)
+        {
+            audioSource.Pause();
+        }
+        else if (muteMusic && !audioSource.isPlaying)
+        {
+            audioSource.Play();
+        }
+    }
+
+    /// <summary>
+    /// Sets the MuteEffects bool when the Effects toggle is changed
+    /// </summary>
+    public void ToggleMuteSFX(Toggle e)
+    {
+        muteSFX = !e.isOn;
     }
 
     /// <summary>

@@ -12,6 +12,18 @@ public class Tower : Targetable
         Dying
     }
 
+    // Audio members, properties and constants
+    private AudioSource audioSource;
+    public AudioClip shootSound;
+    public AudioClip hitSound;
+    public AudioClip deathSound;
+    private const float SHOOT_PITCH = 0.6f;
+    private const float SHOOT_VOLUME = 0.05f;
+    private const float HIT_PITCH = 0.6f;
+    private const float HIT_VOLUME = 0.2f;
+    private const float DEATH_PITCH = 1.0f;
+    private const float DEATH_VOLUME = 0.2f;
+
     //Constants
     public static readonly float SEARCH_RADIUS_SQRT = Mathf.Sqrt(SEARCH_RADIUS);
     public const short MAX_LEVEL = 3;
@@ -49,6 +61,7 @@ public class Tower : Targetable
         overlapSphereCols = new Collider[30];
         target = null;
         Level = 0;
+        audioSource = GetComponent<AudioSource>();
 
         //Find children
         spriteObj = transform.Find("Sprite").GetComponent<SpriteRenderer>();
@@ -208,6 +221,11 @@ public class Tower : Targetable
     /// <param name="damageAmount">The amount of damage to apply</param>
     private void TakeDamage(ushort damageAmount)
     {
+        if (!GameManager.Instance.muteSFX)
+        {
+            audioSource.pitch = HIT_PITCH;
+            audioSource.PlayOneShot(hitSound, HIT_VOLUME * GameManager.Instance.sfxVolume);
+        }
         SetHealth(health - damageAmount);
     }
 
@@ -224,6 +242,11 @@ public class Tower : Targetable
         if (health < 1)
         {
             health = 0;
+            if (!GameManager.Instance.muteSFX)
+            {
+                audioSource.pitch = DEATH_PITCH;
+                audioSource.PlayOneShot(deathSound, DEATH_VOLUME * GameManager.Instance.sfxVolume);
+            }
             currentState = TowerState.Dying;
         }
     }
@@ -296,6 +319,12 @@ public class Tower : Targetable
             var scale = shootSprite.transform.localScale;
             scale.y = Mathf.Max(1, Vector3.Distance(transform.position, currentRobot.transform.position) - 4);
             shootSprite.transform.localScale = scale;
+
+            if (!GameManager.Instance.muteSFX)
+            {
+                audioSource.pitch = SHOOT_PITCH;
+                audioSource.PlayOneShot(shootSound, SHOOT_VOLUME * GameManager.Instance.sfxVolume);
+            }
 
             //Give Damage
             currentRobot.TakeDamage(damageAmnt);
