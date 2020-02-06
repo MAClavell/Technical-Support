@@ -19,7 +19,7 @@ public class Tower : Targetable
     private const int SEARCH_RADIUS = 25;
     private const int MAX_HEALTH = 5;
 
-    public Targetable Target { get; set; }
+    private Targetable target;
     public short Level { get; private set; }
 
     [SerializeField] private HealthBar healthBar;
@@ -47,7 +47,7 @@ public class Tower : Targetable
         timeSinceLastShot = 0.0f;
         currentState = TowerState.Alive;
         overlapSphereCols = new Collider[30];
-        Target = null;
+        target = null;
         Level = 0;
 
         //Find children
@@ -89,10 +89,10 @@ public class Tower : Targetable
                 timeSinceLastShot += Time.deltaTime;
 
                 //Only aim and shoot at valid targets
-                if (IsTargetValid(Target))
+                if (IsTargetValid(target))
                 {
                     //If a target goes out of range, stop shooting at it
-                    if (Vector3.SqrMagnitude(transform.position - Target.transform.position) > SEARCH_RADIUS * SEARCH_RADIUS)
+                    if (Vector3.SqrMagnitude(transform.position - target.transform.position) > SEARCH_RADIUS * SEARCH_RADIUS)
                         SetTarget(null);
                     //Shoot target
                     else
@@ -275,25 +275,31 @@ public class Tower : Targetable
     /// </summary>
     private void SetTarget(Targetable target)
     {
-        Target = target;
+        this.target = target;
     }
 
     private void Aim()
     {
-        spriteObj.transform.LookAt(new Vector3(Target.transform.position.x, transform.position.y, Target.transform.position.z));
+        spriteObj.transform.LookAt(new Vector3(target.transform.position.x, transform.position.y, target.transform.position.z));
         spriteObj.transform.Rotate(new Vector3(90.0f, 0.0f, 0.0f));
     }
 
     private void Shoot()
     {
         //Make sure that the target has not been destroyed by another tower
-        if (Target != null && Target.gameObject.activeSelf)
+        if (IsTargetValid(target))
         {
             //Cast the object into a Robot
-            Robot currentRobot = (Robot)Target;
+            Robot currentRobot = (Robot)target;
+
+            //Stretch sprite
+            var scale = shootSprite.transform.localScale;
+            scale.y = Mathf.Max(1, Vector3.Distance(transform.position, currentRobot.transform.position) - 4);
+            shootSprite.transform.localScale = scale;
+
             //Give Damage
             currentRobot.TakeDamage(damageAmnt);
-            if (IsTargetValid(Target))
+            if (IsTargetValid(target))
                 SetTarget(null);
         }
         timeSinceLastShot = 0.0f;

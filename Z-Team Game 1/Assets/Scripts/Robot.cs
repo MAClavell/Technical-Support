@@ -56,7 +56,6 @@ public class Robot : Targetable
     public void Init(ushort index, Vector3 position)
     {
         Index = index;
-        gameObject.SetActive(true);
         transform.position = position;
         transform.rotation = Quaternion.identity;
         health = MAX_HEALTH;
@@ -65,6 +64,7 @@ public class Robot : Targetable
         currentState = RobotState.Moving;
         currentAttackState = RobotAttackState.Charging;
         Target = GameManager.Instance.player;
+        gameObject.SetActive(true);
         hitboxObj.SetActive(false);
     }
 
