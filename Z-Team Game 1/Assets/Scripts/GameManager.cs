@@ -1,7 +1,8 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using TMPro;
+using System;
 
 public enum GameState { Starting, Playing, Paused, Ended }
 
@@ -20,10 +21,12 @@ public class GameManager : Singleton<GameManager>
     public static readonly Color GREY_TRANSPARENT = new Color(180f / 255f, 180f / 255f, 180f / 255f, TRANSPARENT_ALPHA);
 
     [SerializeField] RobotSpawnZone[] robotSpawnZones;
+    [SerializeField] AnimationCurve spawnCurve;
     [SerializeField] GameObject robotPrefab;
     [SerializeField] GameObject towerPrefab;
     [SerializeField] GameObject zbuckPrefab;
     [SerializeField] Sprite upgradedTowerSprite;
+    [SerializeField] TextMeshProUGUI timerGUI;
     [SerializeField] float boundsX;
     [SerializeField] float boundsY;
 
@@ -52,7 +55,7 @@ public class GameManager : Singleton<GameManager>
     private void Awake()
     {
         towers = new List<Tower>();
-        robotManager = new RobotManager(robotPrefab, robotSpawnZones);
+        robotManager = new RobotManager(robotPrefab, robotSpawnZones, spawnCurve);
         player = GameObject.FindObjectOfType<Player>();
         player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius;
         zBuckets = new List<ZBuck[]>();
@@ -62,7 +65,7 @@ public class GameManager : Singleton<GameManager>
     public void Start()
     {
         //Initialize object pools
-        NewGame();
+        ResetGame();
     }
 
     /// <summary>
@@ -81,7 +84,7 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Reset data in the manager for a new game
     /// </summary>
-    private void NewGame()
+    private void ResetGame()
     {
         CurrentState = GameState.Starting;
         robotManager.Start();
@@ -105,8 +108,9 @@ public class GameManager : Singleton<GameManager>
     /// <summary>
     /// Begin the game
     /// </summary>
-    private void BeginGame()
+    public void BeginGame()
     {
+        ResetGame();
         CurrentState = GameState.Playing;
     }
 
@@ -116,11 +120,11 @@ public class GameManager : Singleton<GameManager>
         switch (CurrentState)
         {
             case GameState.Starting:
-                BeginGame();
                 break;
 
             case GameState.Playing:
                 robotManager.Update();
+                timerGUI.text = $"<mspace=0.6em>{TimeSpan.FromSeconds(robotManager.TotalTime).ToString("mm'::'ss'.'ff")}</mspace>";
 
 #if UNITY_EDITOR
                 //Press 'R' to add zombies (debug only)
@@ -189,7 +193,7 @@ public class GameManager : Singleton<GameManager>
                 CreateZBucket();
 
             //TODO: stop coins from going offscreen
-            float angle = Random.Range(0, 360);
+            float angle = UnityEngine.Random.Range(0, 360);
             Quaternion rotation = Quaternion.Euler(90, 0, angle);
             Vector3 target = position + (rotation * new Vector3(1, CONSTANT_Y_POS, 0));
             

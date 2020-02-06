@@ -97,9 +97,9 @@ public class Tower : Targetable
                     //Shoot target
                     else
                     {
-                        Aim();
                         if (timeSinceLastShot > shootLimit)
                         {
+                            Aim();
                             Shoot();
                             timeSinceLastShot = 0.0f;
                         }

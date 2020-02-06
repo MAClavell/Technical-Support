@@ -6,33 +6,34 @@ class RobotManager
 	private delegate void DecrementRobotDelegate(ushort index);
 	private static event DecrementRobotDelegate decrementRobotEvent;
 
+	public float TotalTime { get; private set; }
+
 	//Spawning
 	private Robot[] robots;
 	private RobotSpawnZone[] spawnZones;
+	private AnimationCurve spawnCurve;
 	private ushort currIndex;
 
 	//Robot spawning
-	private const uint SPAWN_TIME_DIVISOR = 10; //adds one more zombie for time / N. If N=10, then 20 seconds would add 2+1 robots
 	public const ushort MAX_ROBOTS = 500;
 	private uint currAmount;
 	private uint toSpawn;
 	private uint maxToSpawnPerFrame;
 
 	//Timers
-	private const float ADD_PER_FRAME_MAX = 60; //every N seconds allow more robots to spawn per frame
+	private const float ADD_PER_FRAME_MAX = 30; //every N seconds allow more robots to spawn per frame
 	private float addPerFrameTimer;
-	private const float ADD_TIMER_MAX = 10; //add robots to spawn queue every N seconds
+	private const float ADD_TIMER_MAX = 7; //add robots to spawn queue every N seconds
 	private float addTimer;
-	private const float SPAWN_TIMER_MAX = 1; //spawns robots (if there are any to spawn) every N seconds
+	private const float SPAWN_TIMER_MAX = 0.5f; //spawns robots (if there are any to spawn) every N seconds
 	private float spawnTimer;
-	private double totalTime;
 
 
 	/// <summary>
 	/// Create a manager to control robot spawning
 	/// </summary>
 	/// <param name="robotPrefab">The basic robot prefab to spawn</param>
-	public RobotManager(GameObject robotPrefab, RobotSpawnZone[] spawnZones)
+	public RobotManager(GameObject robotPrefab, RobotSpawnZone[] spawnZones, AnimationCurve spawnCurve)
 	{
 		//Setup event
 		decrementRobotEvent += (index) =>
@@ -48,8 +49,9 @@ class RobotManager
 			currIndex--;
 		};
 
-		//Find spawn zones
+		//Assign members
 		this.spawnZones = spawnZones;
+		this.spawnCurve = spawnCurve;
 
 		//Instantiate all robots
 		robots = new Robot[MAX_ROBOTS];
@@ -74,9 +76,9 @@ class RobotManager
 		toSpawn = 0;
 		maxToSpawnPerFrame = 1;
 
-		totalTime = 0;
-		addPerFrameTimer = 0;
+		TotalTime = 0;
 		addTimer = ADD_TIMER_MAX / 2;
+		addPerFrameTimer = 0;
 		spawnTimer = 0;
 	}
 
@@ -85,13 +87,13 @@ class RobotManager
 	/// </summary>
 	public void Update()
 	{
-		totalTime += Time.deltaTime;
-		addPerFrameTimer += Time.deltaTime;
+		TotalTime += Time.deltaTime;
 		addTimer += Time.deltaTime;
 		spawnTimer += Time.deltaTime;
+		addPerFrameTimer += Time.deltaTime;
 
 		//Every N seconds allow more robots to spawn per frame, up to 10 robots
-		if (addPerFrameTimer > ADD_PER_FRAME_MAX && maxToSpawnPerFrame < 10)
+		if (maxToSpawnPerFrame < 10 && addPerFrameTimer > ADD_PER_FRAME_MAX)
 		{
 			addPerFrameTimer -= ADD_PER_FRAME_MAX;
 			maxToSpawnPerFrame++;
@@ -100,8 +102,12 @@ class RobotManager
 		//Add robots to spawn queue
 		if (addTimer > ADD_TIMER_MAX)
 		{
+			//Get amount per frame
+			//At 3 minutes, the spawner caps out and just spawns the same amount from there on
+			int spawnAmnt = Mathf.FloorToInt(spawnCurve.Evaluate(TotalTime));
+
 			addTimer -= ADD_TIMER_MAX;
-			toSpawn += (uint)(totalTime / SPAWN_TIME_DIVISOR) + 1;
+			toSpawn += (uint)spawnAmnt;
 		}
 
 		//Spawn robots

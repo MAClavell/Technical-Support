@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class Player : Targetable
 {
-    public enum PlayerState
+    private enum PlayerState
     {
         Alive,
         Dying,
@@ -21,10 +21,10 @@ public class Player : Targetable
 
     public float TowerSize { get; set; }
 
-    public PlayerState currentState = PlayerState.Dead;
-    public PlayerHealthBar healthBar;
-    public TextMeshProUGUI zBucksCounter;
+    [SerializeField] PlayerHealthBar healthBar;
+    [SerializeField] TextMeshProUGUI zBucksCounter;
 
+    private PlayerState currentState = PlayerState.Dead;
     private Tower lastHighlightedTower;
     private SpriteRenderer towerGhost;
     private Material towerRadiusMatInst;
@@ -40,7 +40,7 @@ public class Player : Targetable
 
     private uint zBucks;
     private int health = 0;
-    bool isBuilding;
+    private bool isBuilding;
     private bool canPlace;
 
     private void Awake()
