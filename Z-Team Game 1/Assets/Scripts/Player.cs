@@ -102,6 +102,7 @@ public class Player : Targetable
 
         canPlace = true;
         currTowerPrice = BASE_TOWER_PRICE;
+        turretCostDisplay.text = currTowerPrice.ToString();
         zBucks = currTowerPrice;
         UpdateZBucksDisplay();
         lastHighlightedTower = null;
@@ -180,6 +181,7 @@ public class Player : Targetable
                         }
 		                GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
                         currTowerPrice += 2;
+                        turretCostDisplay.text = currTowerPrice.ToString();
                         SetBuildMode(false);
 		            }
 		        }
