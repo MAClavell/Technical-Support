@@ -31,6 +31,8 @@ public class GameManager : Singleton<GameManager>
     [SerializeField] float boundsX;
     [SerializeField] float boundsY;
 
+    public GameObject pauseMenu;
+
     public Player player { get; private set; }
     public Sprite UpgradedTowerSprite { get => upgradedTowerSprite; }
     public GameObject mainMenu;
@@ -38,6 +40,16 @@ public class GameManager : Singleton<GameManager>
     // Background music properties
     public AudioSource audioSource;
     public AudioClip mainMusic;
+
+    // Sound Toggle GameObject References
+    public GameObject musicToggleObj;
+    public GameObject effectsToggleObj;
+
+    // DeathScreen related properties
+    public GameObject deathScreen;
+    public TextMeshProUGUI deathTimeDisplay;
+    public TextMeshProUGUI killCountDisplay;
+    public int killCount { get; private set; } = 0;
 
     public float BoundsX { get { return boundsX; } }
     public float BoundsY { get { return boundsY; } }
@@ -69,6 +81,9 @@ public class GameManager : Singleton<GameManager>
         player = GameObject.FindObjectOfType<Player>();
         player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius * 1.5f;
         zBuckets = new List<ZBuck[]>();
+        mainMenu.SetActive(true);
+        effectsToggleObj.SetActive(true);
+        musicToggleObj.SetActive(true);
     }
 
     // Start is called before the first frame update
@@ -116,12 +131,52 @@ public class GameManager : Singleton<GameManager>
     }
 
     /// <summary>
-    /// Begin the game
+    /// Resume the game
     /// </summary>
     public void BeginGame()
     {
         ResetGame();
         CurrentState = GameState.Playing;
+    }
+
+    /// <summary>
+    /// Pause the game
+    /// </summary>
+    public void PauseGame()
+    {
+        CurrentState = GameState.Paused;
+        pauseMenu.SetActive(true);
+        musicToggleObj.SetActive(true);
+        effectsToggleObj.SetActive(true);
+    }
+
+    /// <summary>
+    /// Begin the game
+    /// </summary>
+    public void ResumeGame()
+    {
+        CurrentState = GameState.Playing;
+    }
+
+    /// <summary>
+    /// Ends the game
+    /// </summary>
+    public void EndGame()
+    {
+        CurrentState = GameState.Ended;
+        deathScreen.SetActive(true);
+        musicToggleObj.SetActive(true);
+        effectsToggleObj.SetActive(true);
+        deathTimeDisplay.text = TimeSpan.FromSeconds(robotManager.TotalTime).ToString("mm':'ss'.'ff");
+        killCountDisplay.text = killCount.ToString();
+    }
+
+    /// <summary>
+    /// Sets the killCount property
+    /// </summary>
+    public void IncrementKillCount()
+    {
+        killCount++;
     }
 
     // Update is called once per frame
@@ -135,7 +190,10 @@ public class GameManager : Singleton<GameManager>
             case GameState.Playing:
                 robotManager.Update();
 
-                timerGUI.text = $"<mspace=0.6em>{TimeSpan.FromSeconds(robotManager.TotalTime).ToString("mm'::'ss'.'ff")}</mspace>";
+                timerGUI.text = $"<mspace=0.6em>{TimeSpan.FromSeconds(robotManager.TotalTime).ToString("mm':'ss'.'ff")}</mspace>";
+
+                if (Input.GetKey(KeyCode.P))
+                    PauseGame();
 
 #if UNITY_EDITOR
                 //Press 'R' to add zombies (debug only)
@@ -151,7 +209,6 @@ public class GameManager : Singleton<GameManager>
                 break;
 
             case GameState.Ended:
-                mainMenu.SetActive(true);
                 break;
 
             default:

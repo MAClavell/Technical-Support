@@ -80,8 +80,14 @@ public class Robot : Targetable
     // Update is called once per frame
     void Update()
     {
+        if (GameManager.Instance.CurrentState != GameState.Playing)
+        {
+            if (!agent.isStopped) agent.isStopped = true;
+            return;
+        }
 
-        
+        if (agent.isStopped) agent.isStopped = false;
+
         switch (currentState)
         {
             case RobotState.Moving:
@@ -239,6 +245,7 @@ public class Robot : Targetable
                 audioSource.pitch = DEATH_PITCH;
                 audioSource.PlayOneShot(deathSound, DEATH_VOLUME * GameManager.Instance.sfxVolume);
             }
+            GameManager.Instance.IncrementKillCount();
             RobotManager.DecrementRobotCount(Index);
             gameObject.SetActive(false);
         }

@@ -134,9 +134,6 @@ class RobotManager
 #endif
 	{
 		float speed = 3.6f + spawnAmount / 40.0f;
-		Debug.Log("spawnAmount: " + spawnAmount);
-		Debug.Log("mod 4: " + spawnAmount % 4);
-		Debug.Log("Speed: " + speed);
 
 		robots[currIndex].Init(currIndex, spawnZones[Random.Range(0, spawnZones.Length)].GetRandomPointInZone(), speed);
 		currIndex = (ushort)((currIndex + 1) % MAX_ROBOTS);

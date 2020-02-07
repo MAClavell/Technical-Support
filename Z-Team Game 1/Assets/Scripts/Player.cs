@@ -34,6 +34,10 @@ public class Player : Targetable
     private static readonly ushort[] TOWER_UPGRADE_PRICES = { 3, 6, 9 };
     private const ushort TOWER_PRICE = 5;
 
+    // Turret Cost UI Overlays
+    public GameObject turretCostMessagesObj;
+    public TextMeshProUGUI turretCostDisplay;
+
     public float TowerSize { get; set; }
 
     [SerializeField] PlayerHealthBar healthBar;
@@ -184,7 +188,7 @@ public class Player : Targetable
             case PlayerState.Dying:
                 gameObject.SetActive(false);
                 currentState = PlayerState.Dead;
-                GameManager.Instance.SetGamestate(GameState.Ended);
+                GameManager.Instance.EndGame();
                 break;
 
             case PlayerState.Dead:
@@ -347,6 +351,8 @@ public class Player : Targetable
         isBuilding = buildOn;
         towerGhost.gameObject.SetActive(buildOn);
         GameManager.Instance.SetBuildMode(buildOn);
+
+        turretCostMessagesObj.SetActive(buildOn);
 
         if (isBuilding)
             UpdateTowerGhost();

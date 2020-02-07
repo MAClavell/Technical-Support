@@ -96,6 +96,8 @@ public class Tower : Targetable
     // Update is called once per frame
     void Update()
     {
+        if (GameManager.Instance.CurrentState != GameState.Playing) return; 
+
         switch (currentState)
         {
             case TowerState.Alive:
