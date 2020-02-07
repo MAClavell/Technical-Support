@@ -19,6 +19,7 @@ class RobotManager
 	private uint currAmount;
 	private uint toSpawn;
 	private uint maxToSpawnPerFrame;
+	private int spawnAmount;
 
 	//Timers
 	private const float ADD_PER_FRAME_MAX = 30; //every N seconds allow more robots to spawn per frame
@@ -104,10 +105,9 @@ class RobotManager
 		{
 			//Get amount per frame
 			//At 3 minutes, the spawner caps out and just spawns the same amount from there on
-			int spawnAmnt = Mathf.FloorToInt(spawnCurve.Evaluate(TotalTime));
-
+			spawnAmount = Mathf.FloorToInt(spawnCurve.Evaluate(TotalTime));
 			addTimer -= ADD_TIMER_MAX;
-			toSpawn += (uint)spawnAmnt;
+			toSpawn += (uint)spawnAmount;
 		}
 
 		//Spawn robots
@@ -133,7 +133,12 @@ class RobotManager
 	private void Spawn()
 #endif
 	{
-		robots[currIndex].Init(currIndex, spawnZones[Random.Range(0, spawnZones.Length)].GetRandomPointInZone());
+		float speed = 3.6f + spawnAmount / 40.0f;
+		Debug.Log("spawnAmount: " + spawnAmount);
+		Debug.Log("mod 4: " + spawnAmount % 4);
+		Debug.Log("Speed: " + speed);
+
+		robots[currIndex].Init(currIndex, spawnZones[Random.Range(0, spawnZones.Length)].GetRandomPointInZone(), speed);
 		currIndex = (ushort)((currIndex + 1) % MAX_ROBOTS);
 		currAmount++;
 	}

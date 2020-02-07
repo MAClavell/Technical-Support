@@ -160,7 +160,7 @@ public class Tower : Targetable
         switch (Level)
         {
             case 1:
-                shootLimit = 1;
+                shootLimit = 1.1f;
                 break;
 
             case 2:
@@ -168,8 +168,7 @@ public class Tower : Targetable
                 break;
             
             case 3:
-                damageAmnt = 3;
-                shootLimit = 0.75f;
+                shootLimit = 0.65f;
                 break;
 
             default:

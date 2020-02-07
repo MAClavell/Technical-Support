@@ -67,7 +67,7 @@ public class GameManager : Singleton<GameManager>
         towers = new List<Tower>();
         robotManager = new RobotManager(robotPrefab, robotSpawnZones, spawnCurve);
         player = GameObject.FindObjectOfType<Player>();
-        player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius;
+        player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius * 1.5f;
         zBuckets = new List<ZBuck[]>();
     }
 
@@ -257,7 +257,7 @@ public class GameManager : Singleton<GameManager>
         int swapArrayIndex = (currIndex - 1) % ZBUCKET_SIZE;
 
         //Swap
-        ZBuck temp = zBuckets[swapBucketIndex][swapArrayIndex];
+        ZBuck temp = zBuckets[swapBucketIndex][swapArrayIndex]; // Error here when there are too many Z-Bucks
         zBuckets[swapBucketIndex][swapArrayIndex] = zBuckets[bucketIndex][arrayIndex];
         zBuckets[bucketIndex][arrayIndex] = temp;
         zBuckets[bucketIndex][arrayIndex].Index = index;

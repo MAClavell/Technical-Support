@@ -60,7 +60,7 @@ public class Robot : Targetable
     /// <summary>
 	/// Init the robot to its starting state
 	/// </summary>
-    public void Init(ushort index, Vector3 position)
+    public void Init(ushort index, Vector3 position, float speed)
     {
         Index = index;
         transform.position = position;
@@ -68,6 +68,8 @@ public class Robot : Targetable
         health = MAX_HEALTH;
         searchTimer = 0;
         attackTimer = 0;
+        
+        agent.speed = speed;
         currentState = RobotState.Moving;
         currentAttackState = RobotAttackState.Charging;
         Target = GameManager.Instance.player;
@@ -109,6 +111,7 @@ public class Robot : Targetable
                 //The target is moveable, so continuously update the position
                 else if (Target.IsMoveable)
                     agent.destination = Target.transform.position;
+
 
                 //Activate attack if we can
                 if (attackTimer > ATTACK_TIMER_MAX &&

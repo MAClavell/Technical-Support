@@ -31,8 +31,8 @@ public class Player : Targetable
     private const float MOVE_SPEED = 30.0f;
     private const float ROTATION_SPEED = 10.0f;
     private const int MAX_HEALTH = 10;
-    private static readonly ushort[] TOWER_UPGRADE_PRICES = { 1, 1, 1 };
-    private const ushort TOWER_PRICE = 1;
+    private static readonly ushort[] TOWER_UPGRADE_PRICES = { 3, 6, 9 };
+    private const ushort TOWER_PRICE = 5;
 
     public float TowerSize { get; set; }
 
@@ -97,6 +97,7 @@ public class Player : Targetable
 
         canPlace = true;
         zBucks = TOWER_PRICE;
+        UpdateZBucksDisplay();
         lastHighlightedTower = null;
     }
 

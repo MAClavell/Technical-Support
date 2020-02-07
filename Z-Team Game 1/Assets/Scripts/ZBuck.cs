@@ -105,8 +105,5 @@ public class ZBuck : MonoBehaviour
         
         gameObject.GetComponent<Renderer>().material.color = Color.Lerp(gameObject.GetComponent<Renderer>().material.color, col, Time.deltaTime/MAX_TIME);
         decayTimer += Time.deltaTime;
-
-
-
     }
 }
