@@ -42,6 +42,7 @@ public class GameManager : Singleton<GameManager>
     public AudioClip mainMusic;
 
     // Sound Toggle GameObject References
+    public GameObject radiusToggleObj;
     public GameObject musicToggleObj;
     public GameObject effectsToggleObj;
 
@@ -59,6 +60,7 @@ public class GameManager : Singleton<GameManager>
     /// </summary>
     public GameState CurrentState { get; private set; }
 
+    public bool RadiusOption { get; private set; } = true;
     public bool muteSFX { get; private set; } = false;
     public bool muteMusic { get; private set; } = false;
     public float sfxVolume { get; private set; } = 1.0f;
@@ -82,6 +84,7 @@ public class GameManager : Singleton<GameManager>
         player.TowerSize = towerPrefab.GetComponent<SphereCollider>().radius * 1.5f;
         zBuckets = new List<ZBuck[]>();
         mainMenu.SetActive(true);
+        radiusToggleObj.SetActive(true);
         effectsToggleObj.SetActive(true);
         musicToggleObj.SetActive(true);
     }
@@ -146,6 +149,7 @@ public class GameManager : Singleton<GameManager>
     {
         CurrentState = GameState.Paused;
         pauseMenu.SetActive(true);
+        radiusToggleObj.SetActive(true);
         musicToggleObj.SetActive(true);
         effectsToggleObj.SetActive(true);
     }
@@ -165,6 +169,7 @@ public class GameManager : Singleton<GameManager>
     {
         CurrentState = GameState.Ended;
         deathScreen.SetActive(true);
+        radiusToggleObj.SetActive(true);
         musicToggleObj.SetActive(true);
         effectsToggleObj.SetActive(true);
         deathTimeDisplay.text = TimeSpan.FromSeconds(robotManager.TotalTime).ToString("mm':'ss'.'ff");
@@ -232,6 +237,11 @@ public class GameManager : Singleton<GameManager>
         {
             audioSource.Play();
         }
+    }
+
+    public void ToggleRadiusOption(Toggle e)
+    {
+        RadiusOption = e.isOn;
     }
 
     /// <summary>

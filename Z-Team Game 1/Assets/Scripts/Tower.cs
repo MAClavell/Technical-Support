@@ -212,7 +212,10 @@ public class Tower : Targetable
     /// <param name="buildOn">Whether build mode is on or not</param>
     public void SetBuildMode(bool buildOn)
     {
-        //radiusDisplay.SetActive(buildOn);
+        if (GameManager.Instance.RadiusOption)
+            radiusDisplay.SetActive(buildOn);
+        else radiusDisplay.SetActive(false);
+
         SetBuildColor(TowerBuildColor.Default);
     }
 
