@@ -166,11 +166,11 @@ public class Tower : Targetable
                 break;
 
             case 2:
-                damageAmnt = 2;
-                break;
-            
-            case 3:
                 shootLimit = 0.65f;
+                break;
+
+            case 3:
+                damageAmnt = 2;
                 break;
 
             default:

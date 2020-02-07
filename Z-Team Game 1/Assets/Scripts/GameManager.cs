@@ -277,7 +277,7 @@ public class GameManager : Singleton<GameManager>
     /// <param name="amount">The amount to spawn</param>
     /// <param name="position">The center position</param>
     /// <param name="valuePerBuck">The value of each spawned zbuck</param>
-    public void SpawnZBucks(ushort amount, Vector3 position, ushort valuePerBuck)
+    public void SpawnZBucks(short amount, Vector3 position, ushort valuePerBuck)
     {
         for(ushort i = 0; i < amount; i++)
         {

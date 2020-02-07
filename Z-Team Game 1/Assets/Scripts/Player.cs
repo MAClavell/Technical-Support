@@ -31,8 +31,8 @@ public class Player : Targetable
     private const float MOVE_SPEED = 30.0f;
     private const float ROTATION_SPEED = 10.0f;
     private const int MAX_HEALTH = 10;
-    private static readonly ushort[] TOWER_UPGRADE_PRICES = { 3, 6, 9 };
-    private const ushort TOWER_PRICE = 5;
+    private static readonly ushort[] TOWER_UPGRADE_PRICES = { 5, 15, 30 };
+    private const ushort BASE_TOWER_PRICE = 5;
 
     // Turret Cost UI Overlays
     public GameObject turretCostMessagesObj;
@@ -59,6 +59,7 @@ public class Player : Targetable
 
     private uint zBucks;
     private int health = 0;
+    private ushort currTowerPrice;
     private bool isBuilding;
     private bool canPlace;
 
@@ -100,7 +101,8 @@ public class Player : Targetable
         towerGhost.gameObject.SetActive(false);
 
         canPlace = true;
-        zBucks = TOWER_PRICE;
+        currTowerPrice = BASE_TOWER_PRICE;
+        zBucks = currTowerPrice;
         UpdateZBucksDisplay();
         lastHighlightedTower = null;
     }
@@ -170,14 +172,15 @@ public class Player : Targetable
 		            //Place the tower
 		            else if (canPlace)
 		            {
-                        RemoveZBucks(TOWER_PRICE);
+                        RemoveZBucks(currTowerPrice);
                         if (!GameManager.Instance.muteSFX)
                         {
                             audioSource.pitch = PLACE_TURRET_PITCH;
                             audioSource.PlayOneShot(placeTurretSound, PLACE_TURRET_VOLUME * GameManager.Instance.sfxVolume);
                         }
 		                GameManager.Instance.SpawnTower(towerGhost.transform.position, towerGhost.transform.rotation);
-		                SetBuildMode(false);
+                        currTowerPrice += 2;
+                        SetBuildMode(false);
 		            }
 		        }
 		        //Cancel placement
@@ -369,7 +372,7 @@ public class Player : Targetable
             LayerMask.GetMask("Tower"));
 
         //Update ghost
-        if (numTowers > 0 || zBucks < TOWER_PRICE)
+        if (numTowers > 0 || zBucks < currTowerPrice)
         {
             canPlace = false;
             towerGhost.color = GameManager.RED_TRANSPARENT;

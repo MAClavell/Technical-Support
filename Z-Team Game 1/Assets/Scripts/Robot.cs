@@ -238,7 +238,6 @@ public class Robot : Targetable
         health -= damageAmount;
         if (health < 1)
         {
-            GameManager.Instance.SpawnZBucks((ushort)Random.Range(1, 3), transform.position, 1);
             currentState = RobotState.Dying; //TODO: death animations?
             if (!GameManager.Instance.muteSFX)
             {

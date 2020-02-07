@@ -39,6 +39,17 @@ class RobotManager
 		//Setup event
 		decrementRobotEvent += (index) =>
 		{
+			short zbuckAmnt;
+			if (spawnAmount > 40)
+				zbuckAmnt = (short)Random.Range(-2, 3);
+			else if (spawnAmount > 20)
+				zbuckAmnt = (short)Random.Range(-1, 3);
+			else if (spawnAmount > 5)
+				zbuckAmnt = (short)Random.Range(0, 3);
+			else
+				zbuckAmnt = (short)Random.Range(1, 3);
+			GameManager.Instance.SpawnZBucks(zbuckAmnt, robots[index].transform.position, 1); ;
+
 			currAmount--;
 			
 			//Swap the last spawned robot with this newly dead one
