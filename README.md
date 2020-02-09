@@ -1,2 +1,2 @@
-# Z-Team-Game-1
+# Technical Support
 Z-Team's first game for IGME 450
